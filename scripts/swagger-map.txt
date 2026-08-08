@@ -1,0 +1,896 @@
+﻿
+==== /auth/loginwithtelegram ====
+POST Telegram Mini App initData orqali kirish (keyinroq asosiy usul).
+ body: {"$ref":"TelegramLoginRequest","props":{"props":{"initData":"string","deviceInfo":"string","ipAddress":"string"}}}
+ resp: {"$ref":"AuthTokenResponse","props":{"props":{"accessToken":"string","refreshToken":"string","expiresAt":"string","userId":"integer","isNewUser":"boolean","roleId":"integer"}}}
+
+==== /auth/login ====
+POST Admin panel kirish тАФ telefon va parol (admin).
+ body: {"$ref":"AdminLoginRequest","props":{"props":{"phoneNumber":"string","password":"string","deviceInfo":"string","ipAddress":"string"}}}
+ resp: {"$ref":"AuthTokenResponse","props":{"props":{"accessToken":"string","refreshToken":"string","expiresAt":"string","userId":"integer","isNewUser":"boolean","roleId":"integer"}}}
+
+==== /auth/refresh ====
+POST Access tokenni yangilash.
+ body: {"$ref":"RefreshTokenRequest","props":{"props":{"refreshToken":"string"}}}
+ resp: {"$ref":"AuthTokenResponse","props":{"props":{"accessToken":"string","refreshToken":"string","expiresAt":"string","userId":"integer","isNewUser":"boolean","roleId":"integer"}}}
+
+==== /users/getprofile ====
+GET O'z profilini olish (user).
+ resp: {"$ref":"UserProfileDto","props":{"props":{"id":"integer","telegramId":"integer","username":"string","firstName":"string","lastName":"string","phoneNumber":"string","avatarUrl":"string","roleId":"integer","xp":"integer","level":"integer","cefrLevelId":"integer","atTanalLevelId":"integer"}}}
+
+==== /users/getstats ====
+GET O'z statistikasini olish (user).
+ resp: {"$ref":"UserStatsDto","props":{"props":{"totalCorrectAnswers":"integer","totalWrongAnswers":"integer","totalQuestionsAnswered":"integer","xp":"integer","level":"integer","xpToNextLevel":"integer"}}}
+
+==== /users/updateprofile ====
+POST Profil ma'lumotlarini yangilash (user).
+ body: {"$ref":"UpdateProfileRequest","props":{"props":{"firstName":"string","lastName":"string","cefrLevelId":"integer","atTanalLevelId":"integer"}}}
+ resp: {"$ref":"UserProfileDto","props":{"props":{"id":"integer","telegramId":"integer","username":"string","firstName":"string","lastName":"string","phoneNumber":"string","avatarUrl":"string","roleId":"integer","xp":"integer","level":"integer","cefrLevelId":"integer","atTanalLevelId":"integer"}}}
+
+==== /question/getlist ====
+GET Savollar ro'yxati тАФ filtrlash bilan (admin, user). Admin activeOnly=false bilan nofaol savollarni ham ko'radi.
+ params: query:QuestionTypeId, query:LanguageLevelId, query:ActiveOnly, query:Page, query:PageSize, query:Skip
+
+==== /question/getrandom ====
+GET Tasodifiy savollar тАФ test uchun (user).
+ params: query:Count, query:QuestionTypeId, query:LanguageLevelId
+
+==== /question/create ====
+POST Yangi savol yaratish (admin).
+ body: {"$ref":"CreateQuestionRequest","props":{"props":{"questionTypeId":"integer","categoryId":"integer","languageLevelId":"integer","text":"string","readingPassage":"string","points":"integer","options":"array<QuestionOptionDto>"}}}
+ resp: {"$ref":"QuestionDto","props":{"props":{"id":"integer","questionTypeId":"integer","categoryId":"integer","languageLevelId":"integer","text":"string","readingPassage":"string","points":"integer","isActive":"boolean","options":"array<QuestionOptionDto>"}}}
+
+==== /question/update ====
+POST Savolni yangilash (admin).
+ params: query:id
+ body: {"$ref":"UpdateQuestionRequest","props":{"props":{"text":"string","isActive":"boolean","points":"integer"}}}
+ resp: {"$ref":"QuestionDto","props":{"props":{"id":"integer","questionTypeId":"integer","categoryId":"integer","languageLevelId":"integer","text":"string","readingPassage":"string","points":"integer","isActive":"boolean","options":"array<QuestionOptionDto>"}}}
+
+==== /question/delete ====
+POST Savolni o'chirish (admin).
+ body: {"$ref":"DeleteQuestionRequest","props":{"props":{"id":"integer"}}}
+
+==== /exam/start ====
+POST CEFR mock sessiyasini yaratadi va savollarni generatsiya qiladi.
+ body: {"$ref":"StartExamRequest","props":{"props":{"languageLevelId":"integer"}}}
+ resp: {"$ref":"ExamAttemptDto","props":{"props":{"attemptId":"integer","statusId":"integer","startedAt":"string","completedAt":"string","readingDeadline":"string","listeningDeadline":"string","writingDeadline":"string","skills":"array<ExamSkillSectionDto>","optionLocks":"array<ExamOptionLockDto>"}}}
+
+==== /exam/{attemptId} ====
+GET Attempt holati, savollar, band variantlar va deadline'lar.
+ params: path:attemptId*
+ resp: {"$ref":"ExamAttemptDto","props":{"props":{"attemptId":"integer","statusId":"integer","startedAt":"string","completedAt":"string","readingDeadline":"string","listeningDeadline":"string","writingDeadline":"string","skills":"array<ExamSkillSectionDto>","optionLocks":"array<ExamOptionLockDto>"}}}
+
+==== /exam/{attemptId}/answer ====
+POST Javob yuborish (mcq, yes/no, matching, tfng, matn).
+ params: path:attemptId*
+ body: {"$ref":"SubmitExamAnswerRequest","props":{"props":{"itemId":"integer","answerType":"string","selectedOptionId":"integer","yesNoValue":"integer","tfngValue":"integer","textValue":"string"}}}
+ resp: {"$ref":"SubmitExamAnswerResultDto","props":{"props":{"itemId":"integer","answer":"ExamAnswerViewDto","optionLocks":"array<ExamOptionLockDto>"}}}
+
+==== /exam/{attemptId}/complete ====
+POST Sessiyani yakunlash va Reading/Listening ballarini hisoblash.
+ params: path:attemptId*
+ resp: {"$ref":"ExamResultSummaryDto","props":{"props":{"attemptId":"integer","statusId":"integer","readingScore":"integer","listeningScore":"integer","speakingScore":"integer","writingScore":"integer","totalScore":"integer","completedAt":"string","writingChecks":"array<ExamWritingWordCheckDto>"}}}
+
+==== /exam/{attemptId}/result ====
+GET Natijani olish.
+ params: path:attemptId*
+ resp: {"$ref":"ExamResultSummaryDto","props":{"props":{"attemptId":"integer","statusId":"integer","readingScore":"integer","listeningScore":"integer","speakingScore":"integer","writingScore":"integer","totalScore":"integer","completedAt":"string","writingChecks":"array<ExamWritingWordCheckDto>"}}}
+
+==== /user/getusers ====
+GET Foydalanuvchilar ro'yxati (qidiruv, filtr, sahifalash).
+ params: query:Search, query:BannedOnly, query:ActiveOnly, query:CefrLevelId, query:SubscriptionTypeId, query:Page, query:PageSize, query:Skip
+
+==== /user/updateuser ====
+POST Foydalanuvchini yangilash.
+ body: {"$ref":"UpdateAdminUserRequest","props":{"props":{"userId":"integer","firstName":"string","lastName":"string","username":"string","phoneNumber":"string","cefrLevelId":"integer","atTanalLevelId":"integer","subscriptionTypeId":"integer","xp":"integer","password":"string"}}}
+ resp: {"$ref":"AdminUserDto","props":{"props":{"id":"integer","telegramId":"integer","firstName":"string","lastName":"string","fullName":"string","username":"string","phoneNumber":"string","avatarPath":"string","roleId":"integer","isBanned":"boolean","status":"string","cefrLevelId":"integer","cefrLevelCode":"string","xp":"integer","level":"integer","progressPercent":"number","subscriptionTypeId":"integer","subscriptionCode":"string","subscriptionName":"string","lastActiveAt":"string","createdAt":"string"}}}
+
+==== /user/banuser ====
+POST Foydalanuvchini bloklash.
+ body: {"$ref":"BanUserRequest","props":{"props":{"userId":"integer","reason":"string"}}}
+
+==== /user/unbanuser ====
+POST Foydalanuvchi blokini olib tashlash.
+ body: {"$ref":"UnbanUserRequest","props":{"props":{"userId":"integer"}}}
+
+==== /examresult/getlist ====
+GET Natijalar ro'yxati (filtr + sahifa).
+ params: query:Search, query:ExamTypeId, query:ExamResultStatusId, query:PendingReviewOnly, query:Page, query:PageSize, query:Skip
+
+==== /examresult/getbyid ====
+GET Natija batafsil (Tekshirish).
+ params: query:id
+ resp: {"$ref":"AdminExamResultDetailDto","props":{"props":{"id":"integer","userId":"integer","studentName":"string","username":"string","examDateId":"integer","examTypeId":"integer","examTypeCode":"string","examTypeName":"string","levelId":"integer","levelCode":"string","readingScore":"integer","listeningScore":"integer","writingScore":"integer","speakingScore":"integer","totalScore":"integer","submittedAt":"string","examResultStatusId":"integer","statusCode":"string","statusName":"string","certificateStatusId":"integer","reviewedAt":"string","reviewedByUserId":"integer","createdAt":"string","writing":"AdminExamWritingSummaryDto","speaking":"AdminExamSpeakingSummaryDto"}}}
+
+==== /examresult/approve ====
+POST Natijani tasdiqlash (Yakunlangan).
+ body: {"$ref":"ApproveExamResultRequest","props":{"props":{"examResultId":"integer","readingScore":"integer","listeningScore":"integer","writingScore":"integer","speakingScore":"integer"}}}
+ resp: {"$ref":"AdminExamResultDetailDto","props":{"props":{"id":"integer","userId":"integer","studentName":"string","username":"string","examDateId":"integer","examTypeId":"integer","examTypeCode":"string","examTypeName":"string","levelId":"integer","levelCode":"string","readingScore":"integer","listeningScore":"integer","writingScore":"integer","speakingScore":"integer","totalScore":"integer","submittedAt":"string","examResultStatusId":"integer","statusCode":"string","statusName":"string","certificateStatusId":"integer","reviewedAt":"string","reviewedByUserId":"integer","createdAt":"string","writing":"AdminExamWritingSummaryDto","speaking":"AdminExamSpeakingSummaryDto"}}}
+
+==== /examresult/reject ====
+POST Natijani rad etish.
+ body: {"$ref":"RejectExamResultRequest","props":{"props":{"examResultId":"integer","reason":"string"}}}
+ resp: {"$ref":"AdminExamResultDetailDto","props":{"props":{"id":"integer","userId":"integer","studentName":"string","username":"string","examDateId":"integer","examTypeId":"integer","examTypeCode":"string","examTypeName":"string","levelId":"integer","levelCode":"string","readingScore":"integer","listeningScore":"integer","writingScore":"integer","speakingScore":"integer","totalScore":"integer","submittedAt":"string","examResultStatusId":"integer","statusCode":"string","statusName":"string","certificateStatusId":"integer","reviewedAt":"string","reviewedByUserId":"integer","createdAt":"string","writing":"AdminExamWritingSummaryDto","speaking":"AdminExamSpeakingSummaryDto"}}}
+
+==== /examresult/startreview ====
+POST Tekshirishni boshlash.
+ body: {"$ref":"StartExamReviewRequest","props":{"props":{"examResultId":"integer"}}}
+ resp: {"$ref":"AdminExamResultDetailDto","props":{"props":{"id":"integer","userId":"integer","studentName":"string","username":"string","examDateId":"integer","examTypeId":"integer","examTypeCode":"string","examTypeName":"string","levelId":"integer","levelCode":"string","readingScore":"integer","listeningScore":"integer","writingScore":"integer","speakingScore":"integer","totalScore":"integer","submittedAt":"string","examResultStatusId":"integer","statusCode":"string","statusName":"string","certificateStatusId":"integer","reviewedAt":"string","reviewedByUserId":"integer","createdAt":"string","writing":"AdminExamWritingSummaryDto","speaking":"AdminExamSpeakingSummaryDto"}}}
+
+==== /examdates/getlist ====
+GET Faol imtihon sanalari ro'yxatini olish.
+
+==== /examdates/getmyselection ====
+GET Foydalanuvchining tanlangan imtihon sanasini olish.
+ resp: {"$ref":"DaysRemainingDto","props":{"props":{"examDateId":"integer","daysRemaining":"integer","examDateValue":"string"}}}
+
+==== /examdates/select ====
+POST Imtihon sanasini tanlash.
+ body: {"$ref":"SelectExamDateRequest","props":{"props":{"examDateId":"integer"}}}
+ resp: {"$ref":"ExamDateDto","props":{"props":{"id":"integer","examTypeId":"integer","examDateValue":"string","registrationDeadline":"string","description":"string","isActive":"boolean"}}}
+
+==== /systemsettings/getall ====
+GET Barcha tizim sozlamalari (admin, user).
+
+==== /systemsettings/update ====
+POST Tizim sozlamasini yangilash (admin).
+ body: {"$ref":"UpdateSettingRequest","props":{"props":{"key":"string","value":"string"}}}
+ resp: {"$ref":"SystemSettingDto","props":{"props":{"id":"integer","key":"string","value":"string","description":"string","category":"string","dataType":"string"}}}
+
+==== /analytics/getdashboard ====
+GET Admin dashboard: KPI, haftalik faollik, CEFR taqsimoti.
+ params: query:From, query:To, query:Days
+ resp: {"$ref":"DashboardAnalyticsDto","props":{"props":{"totalStudents":"DashboardKpiDto","activeToday":"DashboardKpiDto","examsSubmitted":"DashboardKpiDto","averageResult":"DashboardKpiDto","weeklyActivity":"array<DailyActivityPointDto>","levelDistribution":"array<LevelDistributionItemDto>"}}}
+
+==== /analytics/getdifficultquestions ====
+GET Qiyin savollar bo'yicha analitika (hozircha summary asosida).
+ params: query:From, query:To, query:Days
+ resp: {"$ref":"AnalyticsSummaryDto","props":{"props":{"totalUsers":"integer","activeUsers":"integer","totalTestSessions":"integer","totalPvpMatches":"integer","totalExamResults":"integer","averageTestScore":"number"}}}
+
+==== /docximport/upload ====
+POST DOCX faylni yuklash (admin).
+ body: {"props":{"file":"string"}}
+
+==== /docximport/preview ====
+POST DOCX faylni import qilishdan oldin ko'rib chiqish.
+ body: {"$ref":"DocxPreviewRequest","props":{"props":{"filePath":"string"}}}
+
+==== /docximport/import ====
+POST DOCX fayldan savollarni import qilish.
+ body: {"$ref":"DocxImportRequest","props":{"props":{"filePath":"string","questionTypeId":"integer","languageLevelId":"integer","importedByUserId":"integer"}}}
+ resp: {"$ref":"DocxImportResultDto","props":{"props":{"importedCount":"integer","skippedCount":"integer","errors":"array<string>"}}}
+
+==== /tests/start ====
+POST Yangi test sessiyasini boshlash.
+ body: {"$ref":"StartTestRequest","props":{"props":{"questionCount":"integer","questionTypeId":"integer","languageLevelId":"integer","idempotencyKey":"string"}}}
+ resp: {"$ref":"TestSessionDto","props":{"props":{"id":"integer","sessionStatusId":"integer","startedAt":"string","completedAt":"string","totalScore":"integer","totalQuestions":"integer","correctAnswers":"integer"}}}
+
+==== /tests/getsession ====
+GET Faol test sessiyasini olish.
+ resp: {"$ref":"TestSessionDto","props":{"props":{"id":"integer","sessionStatusId":"integer","startedAt":"string","completedAt":"string","totalScore":"integer","totalQuestions":"integer","correctAnswers":"integer"}}}
+
+==== /tests/submitanswer ====
+POST Test javobini yuborish.
+ body: {"$ref":"SubmitAnswerRequest","props":{"props":{"testSessionId":"integer","questionId":"integer","selectedOptionId":"integer","timeSpentSeconds":"integer"}}}
+
+==== /tests/complete ====
+POST Test sessiyasini yakunlash.
+ body: {"$ref":"CompleteTestRequest","props":{"props":{"testSessionId":"integer"}}}
+ resp: {"$ref":"TestSessionDto","props":{"props":{"id":"integer","sessionStatusId":"integer","startedAt":"string","completedAt":"string","totalScore":"integer","totalQuestions":"integer","correctAnswers":"integer"}}}
+
+==== /tests/gethistory ====
+GET Test tarixi ro'yxatini olish.
+ params: query:UserId, query:Page, query:PageSize, query:Skip
+
+==== /mistakes/getlist ====
+GET Xato savollar ro'yxatini olish.
+ params: query:UnresolvedOnly, query:Page, query:PageSize, query:Skip
+
+==== /leaderboard/getglobal ====
+GET 
+ params: query:LeaderboardPeriodId, query:Page, query:PageSize, query:Skip
+
+==== /audios/getlist ====
+GET Listening audio ro'yxati (admin).
+ params: query:FileTypeId, query:Page, query:PageSize, query:Skip
+ resp: {"$ref":"FileMetadataDtoPagedResult","props":{"props":{"items":"array<FileMetadataDto>","page":"integer","pageSize":"integer","totalCount":"integer","totalPages":"integer"}}}
+
+==== /audios/upload ====
+POST Listening audio yuklash (admin).
+ body: {"props":{"file":"string"}}
+ resp: {"$ref":"FileMetadataDto","props":{"props":{"id":"integer","originalFileName":"string","url":"string","relativePath":"string","fileTypeId":"integer","mimeType":"string","sizeBytes":"integer","createdAt":"string"}}}
+
+==== /notifications/getlist ====
+GET Foydalanuvchi bildirishnomalari ro'yxatini olish.
+ params: query:UnreadOnly, query:Page, query:PageSize, query:Skip
+
+==== /cefrcontent/getblueprint ====
+GET Part blueprint (selectCount, bank, pin, muddatlar).
+ resp: {"$ref":"CefrBlueprintDto","props":{"props":{"parts":"array<CefrBlueprintPartDto>","readingDurationMinutes":"integer","listeningDurationMinutes":"integer","writingDurationMinutes":"integer"}}}
+
+==== /cefrcontent/getskills ====
+GET Imtihon ko'nikmalari lookup.
+ resp: {"type":"array","items":{"$ref":"#/components/schemas/CefrLookupItemDto"}}
+
+==== /cefrcontent/getinventory ====
+GET Har part inventari: aktiv son vs blueprint selectCount.
+ resp: {"type":"array","items":{"$ref":"#/components/schemas/CefrPartInventoryDto"}}
+
+==== /writing/submit ====
+POST Yozish topshirig'ini yuborish.
+ body: {"$ref":"SubmitWritingRequest","props":{"props":{"examResultId":"integer","content":"string","letterContent":"string"}}}
+ resp: {"$ref":"WritingSubmissionDto","props":{"props":{"id":"integer","wordCount":"integer","status":"string","aiScore":"number","aiFeedback":"string"}}}
+
+==== /speaking/submitaudio ====
+POST 
+ body: {"props":{"examResultId":"integer","durationSeconds":"integer","audio":"string"}}
+ resp: {"$ref":"SpeakingSubmissionDto","props":{"props":{"id":"integer","audioUrl":"string","status":"string","transcription":"string","aiScore":"number"}}}
+
+==== /exportbackup/export ====
+POST Ma'lumotlarni eksport qilish (admin).
+ body: {"$ref":"ExportRequest","props":{"props":{"exportFormatId":"integer","dataType":"string"}}}
+ resp: {"$ref":"ExportJobDto","props":{"props":{"id":"integer","exportFormatId":"integer","status":"string","filePath":"string"}}}
+
+==== /reports/generateadminreport ====
+POST Administrator hisoboti (admin).
+ body: {"$ref":"ReportRequest","props":{"props":{"reportType":"string","from":"string","to":"string","parametersJson":"string"}}}
+ resp: {"$ref":"ReportResultDto","props":{"props":{"filePath":"string","mimeType":"string","sizeBytes":"integer"}}}
+
+==== /monitoring/getauditlogs ====
+GET Audit jurnali yozuvlari (admin).
+ params: query:UserId, query:Action, query:EntityType, query:From, query:To, query:Page, query:PageSize, query:Skip
+
+==== /system/getstatus ====
+GET Tizim holati va umumiy statistika (admin).
+ params: query:From, query:To, query:Days
+ resp: {"$ref":"AnalyticsSummaryDto","props":{"props":{"totalUsers":"integer","activeUsers":"integer","totalTestSessions":"integer","totalPvpMatches":"integer","totalExamResults":"integer","averageTestScore":"number"}}}
+
+==== /pvp/joinqueue ====
+POST PvP navbatiga qo'shilish.
+ body: {"$ref":"JoinMatchRequest","props":{"props":{"userId":"integer","idempotencyKey":"string"}}}
+ resp: {"$ref":"PvpMatchDto","props":{"props":{"id":"integer","player1Id":"integer","player2Id":"integer","pvpMatchStatusId":"integer","winnerId":"integer","player1Score":"integer","player2Score":"integer"}}}
+
+==== /pvp/getmatchstatus ====
+GET Joriy PvP o'yini holatini olish.
+ resp: {"$ref":"PvpMatchDto","props":{"props":{"id":"integer","player1Id":"integer","player2Id":"integer","pvpMatchStatusId":"integer","winnerId":"integer","player1Score":"integer","player2Score":"integer"}}}
+
+## KEY SCHEMAS
+
+### AdminExamResultDetailDto
+{
+  "props": {
+    "id": "integer",
+    "userId": "integer",
+    "studentName": "string",
+    "username": "string",
+    "examDateId": "integer",
+    "examTypeId": "integer",
+    "examTypeCode": "string",
+    "examTypeName": "string",
+    "levelId": "integer",
+    "levelCode": "string",
+    "readingScore": "integer",
+    "listeningScore": "integer",
+    "writingScore": "integer",
+    "speakingScore": "integer",
+    "totalScore": "integer",
+    "submittedAt": "string",
+    "examResultStatusId": "integer",
+    "statusCode": "string",
+    "statusName": "string",
+    "certificateStatusId": "integer",
+    "reviewedAt": "string",
+    "reviewedByUserId": "integer",
+    "createdAt": "string",
+    "writing": "AdminExamWritingSummaryDto",
+    "speaking": "AdminExamSpeakingSummaryDto"
+  }
+}
+
+### AdminLoginRequest
+{
+  "props": {
+    "phoneNumber": "string",
+    "password": "string",
+    "deviceInfo": "string",
+    "ipAddress": "string"
+  }
+}
+
+### AdminUserDto
+{
+  "props": {
+    "id": "integer",
+    "telegramId": "integer",
+    "firstName": "string",
+    "lastName": "string",
+    "fullName": "string",
+    "username": "string",
+    "phoneNumber": "string",
+    "avatarPath": "string",
+    "roleId": "integer",
+    "isBanned": "boolean",
+    "status": "string",
+    "cefrLevelId": "integer",
+    "cefrLevelCode": "string",
+    "xp": "integer",
+    "level": "integer",
+    "progressPercent": "number",
+    "subscriptionTypeId": "integer",
+    "subscriptionCode": "string",
+    "subscriptionName": "string",
+    "lastActiveAt": "string",
+    "createdAt": "string"
+  }
+}
+
+### ApproveExamResultRequest
+{
+  "props": {
+    "examResultId": "integer",
+    "readingScore": "integer",
+    "listeningScore": "integer",
+    "writingScore": "integer",
+    "speakingScore": "integer"
+  }
+}
+
+### AuthTokenResponse
+{
+  "props": {
+    "accessToken": "string",
+    "refreshToken": "string",
+    "expiresAt": "string",
+    "userId": "integer",
+    "isNewUser": "boolean",
+    "roleId": "integer"
+  }
+}
+
+### CefrBlockDto
+{
+  "props": {
+    "id": "integer",
+    "isActive": "boolean",
+    "skillId": "integer",
+    "partNumber": "integer",
+    "subPart": "integer",
+    "title": "string",
+    "passageText": "string",
+    "audioFilePath": "string",
+    "pinPassage": "boolean",
+    "languageLevelId": "integer",
+    "options": "array<CefrBlockOptionDto>",
+    "items": "array<CefrBlockItemDto>"
+  }
+}
+
+### CefrBlockItemDto
+{
+  "props": {
+    "id": "integer",
+    "isActive": "boolean",
+    "blockId": "integer",
+    "itemTypeId": "integer",
+    "promptText": "string",
+    "blankIndex": "integer",
+    "sortOrder": "integer",
+    "correctOptionId": "integer",
+    "correctValue": "integer",
+    "points": "integer"
+  }
+}
+
+### CefrBlockOptionDto
+{
+  "props": {
+    "id": "integer",
+    "isActive": "boolean",
+    "blockId": "integer",
+    "label": "string",
+    "textAr": "string",
+    "sortOrder": "integer"
+  }
+}
+
+### CefrBlueprintDto
+{
+  "props": {
+    "parts": "array<CefrBlueprintPartDto>",
+    "readingDurationMinutes": "integer",
+    "listeningDurationMinutes": "integer",
+    "writingDurationMinutes": "integer"
+  }
+}
+
+### CefrBlueprintPartDto
+{
+  "props": {
+    "skillId": "integer",
+    "partNumber": "integer",
+    "subPart": "integer",
+    "selectionKind": "integer",
+    "selectCount": "integer",
+    "pinPassage": "boolean",
+    "exclusiveOptions": "boolean",
+    "optionBankSize": "integer",
+    "prepSec": "integer",
+    "recordSec": "integer",
+    "minWords": "integer",
+    "maxWords": "integer"
+  }
+}
+
+### CefrEntryDto
+{
+  "props": {
+    "id": "integer",
+    "isActive": "boolean",
+    "skillId": "integer",
+    "partNumber": "integer",
+    "subPart": "integer",
+    "itemTypeId": "integer",
+    "title": "string",
+    "promptText": "string",
+    "passageText": "string",
+    "audioFilePath": "string",
+    "correctPoolOptionId": "integer",
+    "correctValue": "integer",
+    "prepTimeSec": "integer",
+    "recordTimeSec": "integer",
+    "promptJson": "string",
+    "situationText": "string",
+    "taskText": "string",
+    "minWords": "integer",
+    "maxWords": "integer",
+    "points": "integer",
+    "languageLevelId": "integer",
+    "options": "array<CefrEntryOptionDto>"
+  }
+}
+
+### CefrEntryOptionDto
+{
+  "props": {
+    "id": "integer",
+    "isActive": "boolean",
+    "entryId": "integer",
+    "label": "string",
+    "textAr": "string",
+    "sortOrder": "integer",
+    "isCorrect": "boolean"
+  }
+}
+
+### CefrGapBlankDto
+{
+  "props": {
+    "blankIndex": "integer",
+    "correctOptionIndex": "integer",
+    "points": "integer"
+  }
+}
+
+### CefrLookupItemDto
+{
+  "props": {
+    "id": "integer",
+    "code": "string",
+    "name": "string"
+  }
+}
+
+### CefrMatchingEntryDto
+{
+  "props": {
+    "title": "string",
+    "promptText": "string",
+    "correctOptionIndex": "integer",
+    "languageLevelId": "integer",
+    "points": "integer"
+  }
+}
+
+### CefrMatchingPartPayload
+{
+  "props": {
+    "poolTitle": "string",
+    "poolOptions": "array<CefrTemplateOptionDto>",
+    "entries": "array<CefrMatchingEntryDto>",
+    "languageLevelId": "integer"
+  }
+}
+
+### CefrMcqEntryDto
+{
+  "props": {
+    "title": "string",
+    "promptText": "string",
+    "audioFilePath": "string",
+    "options": "array<CefrTemplateOptionDto>",
+    "languageLevelId": "integer",
+    "points": "integer"
+  }
+}
+
+### CefrMcqQuestionDto
+{
+  "props": {
+    "promptText": "string",
+    "options": "array<CefrTemplateOptionDto>",
+    "points": "integer"
+  }
+}
+
+### CefrOptionPoolDto
+{
+  "props": {
+    "id": "integer",
+    "isActive": "boolean",
+    "skillId": "integer",
+    "partNumber": "integer",
+    "subPart": "integer",
+    "title": "string",
+    "options": "array<CefrPoolOptionDto>"
+  }
+}
+
+### CefrPartInventoryDto
+{
+  "props": {
+    "skillId": "integer",
+    "partNumber": "integer",
+    "subPart": "integer",
+    "selectionKind": "integer",
+    "requiredCount": "integer",
+    "activeCount": "integer",
+    "isReady": "boolean"
+  }
+}
+
+### CefrPartSaveResultDto
+{
+  "props": {
+    "createdBlockIds": "array<integer>",
+    "createdEntryIds": "array<integer>",
+    "poolId": "integer",
+    "createdBlockCount": "integer",
+    "createdEntryCount": "integer",
+    "createdPoolOptionCount": "integer"
+  }
+}
+
+### CefrPoolOptionDto
+{
+  "props": {
+    "id": "integer",
+    "isActive": "boolean",
+    "poolId": "integer",
+    "label": "string",
+    "textAr": "string",
+    "sortOrder": "integer"
+  }
+}
+
+### CefrSpeakingEntryDto
+{
+  "props": {
+    "title": "string",
+    "promptText": "string",
+    "promptJson": "string",
+    "prepTimeSec": "integer",
+    "recordTimeSec": "integer",
+    "languageLevelId": "integer",
+    "points": "integer"
+  }
+}
+
+### CefrTemplateOptionDto
+{
+  "props": {
+    "label": "string",
+    "textAr": "string",
+    "isCorrect": "boolean"
+  }
+}
+
+### CefrValueQuestionDto
+{
+  "props": {
+    "promptText": "string",
+    "correctValue": "integer",
+    "points": "integer"
+  }
+}
+
+### CefrWritingEntryDto
+{
+  "props": {
+    "title": "string",
+    "situationText": "string",
+    "taskText": "string",
+    "minWords": "integer",
+    "maxWords": "integer",
+    "languageLevelId": "integer",
+    "points": "integer"
+  }
+}
+
+### CefrYesNoEntryDto
+{
+  "props": {
+    "title": "string",
+    "promptText": "string",
+    "audioFilePath": "string",
+    "correctValue": "integer",
+    "languageLevelId": "integer",
+    "points": "integer"
+  }
+}
+
+### CreateQuestionRequest
+{
+  "props": {
+    "questionTypeId": "integer",
+    "categoryId": "integer",
+    "languageLevelId": "integer",
+    "text": "string",
+    "readingPassage": "string",
+    "points": "integer",
+    "options": "array<QuestionOptionDto>"
+  }
+}
+
+### DeleteCefrContentIdRequest
+{
+  "props": {
+    "id": "integer"
+  }
+}
+
+### ExamAttemptDto
+{
+  "props": {
+    "attemptId": "integer",
+    "statusId": "integer",
+    "startedAt": "string",
+    "completedAt": "string",
+    "readingDeadline": "string",
+    "listeningDeadline": "string",
+    "writingDeadline": "string",
+    "skills": "array<ExamSkillSectionDto>",
+    "optionLocks": "array<ExamOptionLockDto>"
+  }
+}
+
+### ExamDateDto
+{
+  "props": {
+    "id": "integer",
+    "examTypeId": "integer",
+    "examDateValue": "string",
+    "registrationDeadline": "string",
+    "description": "string",
+    "isActive": "boolean"
+  }
+}
+
+### ExamResultDto
+{
+  "props": {
+    "id": "integer",
+    "userId": "integer",
+    "examDateId": "integer",
+    "examResultStatusId": "integer",
+    "readingScore": "integer",
+    "listeningScore": "integer",
+    "writingScore": "integer",
+    "speakingScore": "integer",
+    "totalScore": "integer",
+    "certificateStatusId": "integer"
+  }
+}
+
+### ExamResultSummaryDto
+{
+  "props": {
+    "attemptId": "integer",
+    "statusId": "integer",
+    "readingScore": "integer",
+    "listeningScore": "integer",
+    "speakingScore": "integer",
+    "writingScore": "integer",
+    "totalScore": "integer",
+    "completedAt": "string",
+    "writingChecks": "array<ExamWritingWordCheckDto>"
+  }
+}
+
+### ListeningExamStartRequest
+{
+  "props": {
+    "userId": "integer",
+    "languageLevelId": "integer"
+  }
+}
+
+### QuestionDto
+{
+  "props": {
+    "id": "integer",
+    "questionTypeId": "integer",
+    "categoryId": "integer",
+    "languageLevelId": "integer",
+    "text": "string",
+    "readingPassage": "string",
+    "points": "integer",
+    "isActive": "boolean",
+    "options": "array<QuestionOptionDto>"
+  }
+}
+
+### ReadingExamStartRequest
+{
+  "props": {
+    "userId": "integer",
+    "languageLevelId": "integer"
+  }
+}
+
+### RejectExamResultRequest
+{
+  "props": {
+    "examResultId": "integer",
+    "reason": "string"
+  }
+}
+
+### SaveCefrBatchRequest
+{
+  "props": {
+    "readingPart1": "array<SaveReadingPart1Item>",
+    "readingPart2": "CefrMatchingPartPayload",
+    "readingPart3": "CefrMatchingPartPayload",
+    "readingPart4": "array<SaveReadingPart4Item>",
+    "readingPart5": "array<SaveReadingPart5Item>",
+    "listeningPart1": "array<CefrMcqEntryDto>",
+    "listeningPart2": "array<CefrYesNoEntryDto>",
+    "listeningPart3": "CefrMatchingPartPayload",
+    "listeningPart4": "CefrMatchingPartPayload",
+    "listeningPart5": "array<CefrMcqEntryDto>",
+    "listeningPart6": "array<CefrMcqEntryDto>",
+    "speakingPart1": "array<CefrSpeakingEntryDto>",
+    "speakingPart2": "array<CefrSpeakingEntryDto>",
+    "speakingPart3": "array<CefrSpeakingEntryDto>",
+    "speakingPart4": "array<CefrSpeakingEntryDto>",
+    "speakingPart5": "array<CefrSpeakingEntryDto>",
+    "speakingPart6": "array<CefrSpeakingEntryDto>",
+    "speakingPart7": "array<CefrSpeakingEntryDto>",
+    "speakingPart8": "array<CefrSpeakingEntryDto>",
+    "writingPart1Sub1": "array<CefrWritingEntryDto>",
+    "writingPart1Sub2": "array<CefrWritingEntryDto>",
+    "writingPart2": "array<CefrWritingEntryDto>"
+  }
+}
+
+### SelectExamDateRequest
+{
+  "props": {
+    "examDateId": "integer"
+  }
+}
+
+### SubmitAnswerRequest
+{
+  "props": {
+    "testSessionId": "integer",
+    "questionId": "integer",
+    "selectedOptionId": "integer",
+    "timeSpentSeconds": "integer"
+  }
+}
+
+### SubmitExamAnswerRequest
+{
+  "props": {
+    "itemId": "integer",
+    "answerType": "string",
+    "selectedOptionId": "integer",
+    "yesNoValue": "integer",
+    "tfngValue": "integer",
+    "textValue": "string"
+  }
+}
+
+### SubmitPvpAnswerRequest
+{
+  "props": {
+    "matchId": "integer",
+    "userId": "integer",
+    "questionId": "integer",
+    "selectedOptionId": "integer"
+  }
+}
+
+### SystemSettingDto
+{
+  "props": {
+    "id": "integer",
+    "key": "string",
+    "value": "string",
+    "description": "string",
+    "category": "string",
+    "dataType": "string"
+  }
+}
+
+### TelegramLoginRequest
+{
+  "props": {
+    "initData": "string",
+    "deviceInfo": "string",
+    "ipAddress": "string"
+  }
+}
+
+### UpdateCefrBlockRequest
+{
+  "props": {
+    "title": "string",
+    "passageText": "string",
+    "audioFilePath": "string",
+    "pinPassage": "boolean",
+    "isActive": "boolean",
+    "languageLevelId": "integer"
+  }
+}
+
+### UpdateCefrEntryRequest
+{
+  "props": {
+    "title": "string",
+    "promptText": "string",
+    "passageText": "string",
+    "audioFilePath": "string",
+    "correctPoolOptionId": "integer",
+    "correctValue": "integer",
+    "prepTimeSec": "integer",
+    "recordTimeSec": "integer",
+    "promptJson": "string",
+    "situationText": "string",
+    "taskText": "string",
+    "minWords": "integer",
+    "maxWords": "integer",
+    "points": "integer",
+    "isActive": "boolean",
+    "languageLevelId": "integer"
+  }
+}
+
+### UpdateProfileRequest
+{
+  "props": {
+    "firstName": "string",
+    "lastName": "string",
+    "cefrLevelId": "integer",
+    "atTanalLevelId": "integer"
+  }
+}
+
+### UserProfileDto
+{
+  "props": {
+    "id": "integer",
+    "telegramId": "integer",
+    "username": "string",
+    "firstName": "string",
+    "lastName": "string",
+    "phoneNumber": "string",
+    "avatarUrl": "string",
+    "roleId": "integer",
+    "xp": "integer",
+    "level": "integer",
+    "cefrLevelId": "integer",
+    "atTanalLevelId": "integer"
+  }
+}

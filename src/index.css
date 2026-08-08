@@ -1,0 +1,121 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root { color-scheme: dark; }
+
+html, body, #root {
+  height: 100%;
+  max-height: 100%;
+  overflow: hidden; /* brauzer scroll yo‘q — faqat mini-app ichida */
+}
+body {
+  margin: 0;
+  background: #05070a;
+  color: #ffffff;
+  font-family: 'Inter', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior: none;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #232A36; border-radius: 8px; }
+::-webkit-scrollbar-thumb:hover { background: #313b4a; }
+
+/* Arabcha savol / matn — doim oq */
+.arabic {
+  font-family: 'Amiri', 'Times New Roman', serif;
+  direction: rtl;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff;
+}
+
+.q-text {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff;
+}
+
+.q-opt {
+  color: #f1f5f9 !important;
+  -webkit-text-fill-color: #f1f5f9;
+}
+
+.q-opt-correct {
+  color: #3DDC97 !important;
+  -webkit-text-fill-color: #3DDC97;
+}
+
+.q-opt-wrong {
+  color: #fca5a5 !important;
+  -webkit-text-fill-color: #fca5a5;
+}
+
+/* Hide number input spinners */
+input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+::selection {
+  background: rgba(61, 220, 151, 0.35);
+  color: #ffffff;
+}
+
+/* Tayyorgarlik aylana */
+.prep-spin {
+  animation: prep-spin 1s linear infinite;
+}
+@keyframes prep-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Asosiy sahifa — news sheet */
+.news-sheet {
+  will-change: height;
+}
+
+/* Sticky matn scroll — yupqa yashil thumb */
+.passage-scroll::-webkit-scrollbar { width: 5px; }
+.passage-scroll::-webkit-scrollbar-track { background: transparent; }
+.passage-scroll::-webkit-scrollbar-thumb {
+  background: rgba(61, 220, 151, 0.35);
+  border-radius: 8px;
+}
+.passage-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(61, 220, 151, 0.55);
+}
+
+/* Gapirish — mikrofonda puls / gapirganda qimirlash */
+.mic-pulse {
+  box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.55);
+  animation: mic-glow 1.2s ease-out infinite;
+}
+.mic-speaking {
+  animation: mic-glow 1.2s ease-out infinite, mic-bob 0.55s ease-in-out infinite;
+}
+.mic-ring {
+  position: absolute;
+  inset: -6px;
+  border-radius: 9999px;
+  border: 2px solid rgba(239, 68, 68, 0.65);
+  animation: mic-ripple 1.4s ease-out infinite;
+  pointer-events: none;
+}
+.mic-ring.delay {
+  animation-delay: 0.45s;
+}
+.mic-ring.delay2 {
+  animation-delay: 0.9s;
+}
+@keyframes mic-glow {
+  0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5); }
+  70% { box-shadow: 0 0 0 18px rgba(239, 68, 68, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+@keyframes mic-ripple {
+  0% { transform: scale(1); opacity: 0.8; }
+  100% { transform: scale(1.55); opacity: 0; }
+}
+@keyframes mic-bob {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+}

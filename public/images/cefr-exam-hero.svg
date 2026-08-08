@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1200" y2="675" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0B1210"/>
+      <stop offset="0.55" stop-color="#101816"/>
+      <stop offset="1" stop-color="#0B1210"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(600 260) rotate(90) scale(420 260)">
+      <stop stop-color="#3DDC97" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#3DDC97" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1200" height="675" rx="48" fill="url(#bg)"/>
+  <rect width="1200" height="675" rx="48" fill="url(#glow)"/>
+
+  <!-- ARABOSFERA — tepada, yashil -->
+  <text x="600" y="150" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="64" font-weight="800" fill="#3DDC97" letter-spacing="4">ARABOSFERA</text>
+
+  <!-- CEFR — oq -->
+  <text x="600" y="220" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="48" font-weight="700" fill="#FFFFFF" letter-spacing="10">CEFR</text>
+
+  <!-- 4 skill -->
+  <g font-family="Segoe UI, Arial, sans-serif" text-anchor="middle">
+    <!-- Reading -->
+    <rect x="140" y="290" width="200" height="88" rx="20" fill="#3DDC97" fill-opacity="0.1" stroke="#3DDC97" stroke-opacity="0.45" stroke-width="1.5"/>
+    <text x="240" y="328" font-size="15" font-weight="700" fill="#3DDC97" letter-spacing="1">READING</text>
+    <text x="240" y="355" font-size="18" font-weight="600" fill="#FFFFFF" opacity="0.85">O‘qish</text>
+
+    <!-- Listening -->
+    <rect x="380" y="290" width="200" height="88" rx="20" fill="#3DDC97" fill-opacity="0.1" stroke="#3DDC97" stroke-opacity="0.45" stroke-width="1.5"/>
+    <text x="480" y="328" font-size="15" font-weight="700" fill="#3DDC97" letter-spacing="1">LISTENING</text>
+    <text x="480" y="355" font-size="18" font-weight="600" fill="#FFFFFF" opacity="0.85">Tinglash</text>
+
+    <!-- Writing -->
+    <rect x="620" y="290" width="200" height="88" rx="20" fill="#3DDC97" fill-opacity="0.1" stroke="#3DDC97" stroke-opacity="0.45" stroke-width="1.5"/>
+    <text x="720" y="328" font-size="15" font-weight="700" fill="#3DDC97" letter-spacing="1">WRITING</text>
+    <text x="720" y="355" font-size="18" font-weight="600" fill="#FFFFFF" opacity="0.85">Yozuv</text>
+
+    <!-- Speaking -->
+    <rect x="860" y="290" width="200" height="88" rx="20" fill="#3DDC97" fill-opacity="0.1" stroke="#3DDC97" stroke-opacity="0.45" stroke-width="1.5"/>
+    <text x="960" y="328" font-size="15" font-weight="700" fill="#3DDC97" letter-spacing="1">SPEAKING</text>
+    <text x="960" y="355" font-size="18" font-weight="600" fill="#FFFFFF" opacity="0.85">Gapirish</text>
+  </g>
+
+  <!-- Darajalar — kichikroq -->
+  <g font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" text-anchor="middle">
+    <rect x="270" y="470" width="80" height="46" rx="12" fill="#3DDC97" fill-opacity="0.1" stroke="#3DDC97" stroke-opacity="0.45" stroke-width="1.5"/>
+    <text x="310" y="500" fill="#9FE9C8">A1</text>
+
+    <rect x="370" y="470" width="80" height="46" rx="12" fill="#3DDC97" fill-opacity="0.12" stroke="#3DDC97" stroke-opacity="0.5" stroke-width="1.5"/>
+    <text x="410" y="500" fill="#A8ECCF">A2</text>
+
+    <rect x="470" y="470" width="80" height="46" rx="12" fill="#3DDC97" fill-opacity="0.16" stroke="#3DDC97" stroke-opacity="0.6" stroke-width="1.5"/>
+    <text x="510" y="500" fill="#B6F0D7">B1</text>
+
+    <rect x="570" y="470" width="80" height="46" rx="12" fill="#3DDC97" fill-opacity="0.2" stroke="#3DDC97" stroke-opacity="0.7" stroke-width="1.5"/>
+    <text x="610" y="500" fill="#C4F4DF">B2</text>
+
+    <rect x="670" y="470" width="80" height="46" rx="12" fill="#3DDC97" fill-opacity="0.3" stroke="#3DDC97" stroke-width="1.5"/>
+    <text x="710" y="500" fill="#E8FFF4">C1</text>
+
+    <rect x="770" y="470" width="80" height="46" rx="12" fill="#3DDC97" fill-opacity="0.4" stroke="#3DDC97" stroke-width="1.5"/>
+    <text x="810" y="500" fill="#FFFFFF">C2</text>
+  </g>
+</svg>
