@@ -158,6 +158,9 @@ export function unwrapList(data) {
   if (Array.isArray(data)) return data
   // Newtonsoft ReferenceHandler / System.Text.Json $values
   if (Array.isArray(data.$values)) return data.$values
+  // ASP.NET /post/getactive: { value: [...], Count }
+  if (Array.isArray(data.value)) return data.value
+  if (Array.isArray(data.Value)) return data.Value
   if (Array.isArray(data.items)) return data.items
   if (Array.isArray(data.Items)) return data.Items
   if (Array.isArray(data.data)) return data.data
@@ -169,6 +172,7 @@ export function unwrapList(data) {
   if (Array.isArray(data.users)) return data.users
   if (data.items?.$values) return data.items.$values
   if (data.data?.$values) return data.data.$values
+  if (data.value?.$values) return data.value.$values
   return []
 }
 

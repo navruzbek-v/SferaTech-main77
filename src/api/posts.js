@@ -1,9 +1,8 @@
-import { api, unwrapList, getApiBase } from './client.js'
+import { api, unwrapList } from './client.js'
 import { HOME_NEWS } from '../data/homeNews.js'
 
 const BACKEND_ORIGIN = 'https://arabosfera.onrender.com'
 
-/** Placeholder / test matnlar (adminda "." yozilgan holat) */
 export function cleanPostText(value) {
   const s = String(value ?? '').trim()
   if (!s) return ''
@@ -11,36 +10,19 @@ export function cleanPostText(value) {
   return s
 }
 
-/** Backend static / proxy origin */
 export function getMediaBase() {
   const fromEnv = (import.meta.env.VITE_MEDIA_BASE_URL || '').replace(/\/$/, '')
   if (fromEnv) return fromEnv
-
-  const apiBase = getApiBase()
-  // Vite + Vercel: /api → arabosfera.onrender.com (same-origin)
-  if (apiBase === '/api' || apiBase.endsWith('/api')) return '/api'
-
-  if (/^https?:\/\//i.test(apiBase)) {
-    try {
-      return new URL(apiBase).origin
-    } catch { /* */ }
-  }
   return BACKEND_ORIGIN
 }
 
-/** `images/content/posts/x.webp` → to‘liq URL (proxy orqali) */
 export function resolveMediaUrl(path) {
   if (!path) return null
   const p = String(path).trim()
   if (!p) return null
   if (/^https?:\/\//i.test(p) || p.startsWith('data:') || p.startsWith('blob:')) return p
-
-  const base = getMediaBase()
   const rel = p.replace(/^\.\//, '').replace(/^\//, '')
-
-  if (base === '/api') return `/api/${rel}`
-  if (p.startsWith('/')) return `${base}${p}`
-  return `${base}/${rel}`
+  return `${getMediaBase()}/${rel}`
 }
 
 function pick(obj, ...keys) {
@@ -56,7 +38,6 @@ function asHttpUrl(value) {
   return href
 }
 
-/** API post → UI model */
 export function mapPost(raw) {
   if (!raw || typeof raw !== 'object') return null
 
@@ -71,14 +52,12 @@ export function mapPost(raw) {
   const actionPayload = pick(raw, 'actionPayload', 'ActionPayload', 'url', 'Url', 'link', 'Link')
 
   let url = asHttpUrl(pick(raw, 'url', 'Url'))
-  if (!url && actionCode && actionCode !== 'none') {
+  if (!url && actionCode && actionCode !== 'none' && actionCode !== 'openpremium') {
     url = asHttpUrl(actionPayload)
   }
   if (!url) url = asHttpUrl(actionPayload)
 
   const sortOrder = Number(pick(raw, 'sortOrder', 'SortOrder') ?? 0)
-
-  // Hech narsa yo‘q — o‘tkazib yuborish
   if (!title && !body && !imagePath && !url) return null
 
   return {
@@ -88,7 +67,7 @@ export function mapPost(raw) {
     badgeText,
     imagePath,
     imageUrl: resolveMediaUrl(imagePath),
-    ctaText: ctaText || (url ? 'Batafsil' : null),
+    ctaText: ctaText || (url ? 'O‘qish' : null),
     url,
     sortOrder: Number.isFinite(sortOrder) ? sortOrder : 0,
   }
@@ -102,7 +81,10 @@ function normalizePosts(data) {
 }
 
 async function fetchJson(url) {
-  const res = await fetch(url, { method: 'GET', headers: { Accept: 'application/json' } })
+  const res = await fetch(url, {
+    method: 'GET',
+    headers: { Accept: 'application/json' },
+  })
   if (!res.ok) {
     const err = new Error(`HTTP ${res.status}`)
     err.status = res.status
@@ -111,31 +93,21 @@ async function fetchJson(url) {
   return res.json()
 }
 
-/**
- * Faol postlar — AllowAnonymous.
- * 1) sozlangan API base  2) to‘g‘ridan backend
- */
+/** Faol postlar — xato bo‘lsa [] (UI fallback ishlatadi) */
 export async function getActivePosts() {
-  const errors = []
-
   try {
     const data = await api.get('/post/getactive', undefined, { auth: false })
     return normalizePosts(data)
-  } catch (e) {
-    errors.push(e)
-  }
+  } catch { /* */ }
 
   try {
     const data = await fetchJson(`${BACKEND_ORIGIN}/post/getactive`)
     return normalizePosts(data)
-  } catch (e) {
-    errors.push(e)
-  }
+  } catch { /* */ }
 
-  throw errors[errors.length - 1] || new Error('Posts yuklanmadi')
+  return []
 }
 
-/** API ishlamasa — lokal fallback */
 export function fallbackPosts() {
   return (HOME_NEWS || []).map((n) => ({
     id: n.id,

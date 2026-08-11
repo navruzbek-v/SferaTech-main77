@@ -27,13 +27,12 @@ export default function App() {
 
   useEffect(() => {
     initTelegram()
-    // /admin yo‘q — asosiy sahifaga qaytarish
+    // Mini-app: /admin yo‘q
     if (window.location.pathname.startsWith('/admin')) {
       setPath('/', { replace: true })
     }
     ;(async () => {
       try {
-        // Mehmon rejim: eski/yaroqsiz token bilan 401 chiqmasin
         const canAuth = Boolean(getInitData())
           || Boolean(import.meta.env.VITE_DEMO_PHONE && import.meta.env.VITE_DEMO_PASSWORD)
         if (!canAuth) {
@@ -69,7 +68,6 @@ export default function App() {
     if (!isCorrect) setErrorCount((c) => c + 1)
   }, [])
 
-  /** To‘g‘ri javoblar foizi (3/5 → 60%), emas “hammasi yechilgan” */
   const progressPct = useMemo(() => {
     const done = stats.correct + stats.wrong
     if (!done) return 0
@@ -132,7 +130,6 @@ export default function App() {
   )
 }
 
-/** Bitta scroll: faqat telefon ramka ichida. Brauzer o‘zi scroll qilmaydi. */
 function PhoneFrame({ children }) {
   return (
     <div className="h-[100dvh] w-full overflow-hidden flex items-center justify-center bg-gradient-to-b from-[#05070a] to-[#0b0f16] sm:p-6">

@@ -35,8 +35,7 @@ export default function Dashboard() {
 
   return (
     <div className="relative h-full bg-[#0B1210] overflow-hidden">
-      {/* Asosiy kontent — pastki sheet uchun joy */}
-      <div className="h-full overflow-y-auto pb-[5.5rem] px-4 pt-5">
+      <div className="h-full overflow-y-auto px-4 pt-5 pb-6">
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2.5 min-w-0">
@@ -157,7 +156,7 @@ export default function Dashboard() {
         <button
           type="button"
           onClick={() => setScreen('battle')}
-          className="w-full rounded-2xl bg-[#2A3238] text-white px-4 py-4 flex items-center justify-between mb-2 active:scale-[0.99] transition"
+          className="w-full rounded-2xl bg-[#2A3238] text-white px-4 py-4 flex items-center justify-between active:scale-[0.99] transition"
         >
           <div className="text-left">
             <p className="font-black text-lg leading-none">Oktagon</p>
@@ -167,10 +166,10 @@ export default function Dashboard() {
             <Swords size={20} />
           </span>
         </button>
-      </div>
 
-      {/* PayMe-style news sheet */}
-      <NewsSheet onStartCefr={() => setExam('CEFR')} />
+        {/* Postlar — oddiy scroll, pastga stack (sheet yo‘q) */}
+        <NewsSheet onStartCefr={() => setExam('CEFR')} />
+      </div>
 
       {/* Imtihon tanlash */}
       <Modal open={examPick} onClose={() => setExamPick(false)} title="Imtihon turini tanlang">
