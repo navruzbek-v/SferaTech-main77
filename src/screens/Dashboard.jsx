@@ -34,12 +34,29 @@ export default function Dashboard() {
   if (exam) return <ExamSimulator type={exam} onExit={() => setExam(null)} />
 
   return (
-    <div className="relative h-full bg-[#0B1210] overflow-hidden">
-      <div className="h-full overflow-y-auto px-4 pt-5 pb-6">
+    <div className="relative h-full overflow-hidden bg-[#07090d]">
+      {/* Payme uslubi: blur atmosferali fon */}
+      <div aria-hidden className="absolute inset-0 pointer-events-none">
+        <div
+          className="absolute -top-24 -right-16 w-72 h-72 rounded-full opacity-40 blur-3xl"
+          style={{ background: 'radial-gradient(circle, #2a4a7a 0%, transparent 70%)' }}
+        />
+        <div
+          className="absolute top-40 -left-20 w-64 h-64 rounded-full opacity-30 blur-3xl"
+          style={{ background: 'radial-gradient(circle, #3d2a5c 0%, transparent 70%)' }}
+        />
+        <div
+          className="absolute bottom-32 right-0 w-56 h-56 rounded-full opacity-25 blur-3xl"
+          style={{ background: 'radial-gradient(circle, #1a4a3a 0%, transparent 70%)' }}
+        />
+        <div className="absolute inset-0 bg-[#07090d]/55" />
+      </div>
+
+      <div className="relative h-full overflow-y-auto px-4 pt-5 pb-[38vh]">
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-11 h-11 rounded-full bg-gradient-to-br from-emerald-400/40 to-sky-500/30 border border-white/15 flex items-center justify-center text-base font-black shrink-0">
+            <div className="w-11 h-11 rounded-full bg-white/10 border border-white/15 backdrop-blur-md flex items-center justify-center text-base font-black shrink-0">
               {initial}
             </div>
             <div className="min-w-0">
@@ -66,11 +83,11 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Progress card */}
+        {/* Progress card — glass */}
         <button
           type="button"
           onClick={() => setCalOpen(true)}
-          className="w-full text-left rounded-2xl border border-neon/35 bg-[#0E1A16] p-4 mb-3"
+          className="w-full text-left rounded-[1.35rem] border border-white/10 bg-white/[0.06] backdrop-blur-md p-4 mb-3"
         >
           <div className="flex items-center justify-between text-sm mb-2">
             <span className="flex items-center gap-1.5 text-white/85 font-medium">
@@ -104,7 +121,7 @@ export default function Dashboard() {
             <button
               type="button"
               onClick={() => setSection('all')}
-              className="flex-1 rounded-2xl bg-[#152028] border border-white/8 p-4 text-left active:scale-[0.98] transition"
+              className="flex-1 rounded-[1.25rem] bg-white/[0.07] border border-white/10 backdrop-blur-md p-4 text-left active:scale-[0.98] transition"
             >
               <ListChecks size={22} className="text-sky-300 mb-2" />
               <p className="font-bold text-sm leading-snug">Barcha testlar</p>
@@ -112,7 +129,7 @@ export default function Dashboard() {
             <button
               type="button"
               onClick={() => setSection('errors')}
-              className="relative flex-1 rounded-2xl bg-[#152028] border border-white/8 p-4 text-left active:scale-[0.98] transition"
+              className="relative flex-1 rounded-[1.25rem] bg-white/[0.07] border border-white/10 backdrop-blur-md p-4 text-left active:scale-[0.98] transition"
             >
               {app.errorCount > 0 && (
                 <span className="absolute top-2.5 right-2.5 min-w-[22px] h-[22px] px-1 rounded-full bg-red-500 text-white text-[11px] font-black flex items-center justify-center">
@@ -126,7 +143,7 @@ export default function Dashboard() {
           <button
             type="button"
             onClick={() => app.notify?.('Premium tez orada', 'info')}
-            className="rounded-2xl bg-gradient-to-b from-[#1a2744] to-[#121c30] border border-sky-500/25 p-4 text-left flex flex-col justify-between min-h-[168px] active:scale-[0.98] transition"
+            className="rounded-[1.25rem] bg-white/[0.08] border border-sky-400/20 backdrop-blur-md p-4 text-left flex flex-col justify-between min-h-[168px] active:scale-[0.98] transition"
           >
             <p className="text-2xl font-black leading-tight text-white">
               Premium<br />oling
@@ -141,13 +158,13 @@ export default function Dashboard() {
         <button
           type="button"
           onClick={() => setExamPick(true)}
-          className="w-full rounded-2xl bg-neon text-black px-4 py-4 flex items-center justify-between mb-2.5 active:scale-[0.99] transition shadow-[0_8px_28px_rgba(61,220,151,0.25)]"
+          className="w-full rounded-[1.35rem] bg-[#f3f3f5] text-black px-4 py-4 flex items-center justify-between mb-2.5 active:scale-[0.99] transition"
         >
           <div className="text-left">
             <p className="font-black text-lg leading-none">Imtihon topshirish</p>
-            <p className="text-xs font-bold text-black/55 mt-1 uppercase tracking-wide">CEFR · AT-TANAL</p>
+            <p className="text-xs font-bold text-black/50 mt-1 uppercase tracking-wide">CEFR · AT-TANAL</p>
           </div>
-          <span className="w-11 h-11 rounded-full bg-black/15 flex items-center justify-center">
+          <span className="w-11 h-11 rounded-full bg-black/10 flex items-center justify-center">
             <Play size={22} fill="currentColor" />
           </span>
         </button>
@@ -156,7 +173,7 @@ export default function Dashboard() {
         <button
           type="button"
           onClick={() => setScreen('battle')}
-          className="w-full rounded-2xl bg-[#2A3238] text-white px-4 py-4 flex items-center justify-between active:scale-[0.99] transition"
+          className="w-full rounded-[1.35rem] bg-white/[0.08] border border-white/10 backdrop-blur-md text-white px-4 py-4 flex items-center justify-between active:scale-[0.99] transition"
         >
           <div className="text-left">
             <p className="font-black text-lg leading-none">Oktagon</p>
@@ -166,10 +183,10 @@ export default function Dashboard() {
             <Swords size={20} />
           </span>
         </button>
-
-        {/* Postlar — oddiy scroll, pastga stack (sheet yo‘q) */}
-        <NewsSheet onStartCefr={() => setExam('CEFR')} />
       </div>
+
+      {/* Payme pastki qoraygan post panel */}
+      <NewsSheet onStartCefr={() => setExam('CEFR')} />
 
       {/* Imtihon tanlash */}
       <Modal open={examPick} onClose={() => setExamPick(false)} title="Imtihon turini tanlang">
