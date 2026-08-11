@@ -6,6 +6,32 @@ import { openExternalLink, haptic } from '../lib/telegram.js'
 const PEEK = 78
 const EXPANDED_RATIO = 0.88
 
+function PostImage({ src }) {
+  const [visible, setVisible] = useState(Boolean(src))
+
+  useEffect(() => {
+    setVisible(Boolean(src))
+  }, [src])
+
+  if (!src || !visible) return null
+
+  return (
+    <div className="px-3 pb-1">
+      <div className="relative rounded-2xl overflow-hidden aspect-[16/10] bg-[#0e1318]">
+        <img
+          src={src}
+          alt=""
+          loading="lazy"
+          decoding="async"
+          className="w-full h-full object-cover"
+          onError={() => setVisible(false)}
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/35 to-transparent pointer-events-none" />
+      </div>
+    </div>
+  )
+}
+
 /**
  * Pastki sheet — GET /post/getactive feed.
  * CTA: url bo‘lsa → Telegram.WebApp.openLink
@@ -19,8 +45,9 @@ export default function NewsSheet({ onStartCefr }) {
   const [height, setHeight] = useState(PEEK)
   const [maxH, setMaxH] = useState(() => Math.round(window.innerHeight * EXPANDED_RATIO))
   const [draggingUi, setDraggingUi] = useState(false)
-  const [posts, setPosts] = useState(() => fallbackPosts())
+  const [posts, setPosts] = useState([])
   const [loading, setLoading] = useState(true)
+  const [fromApi, setFromApi] = useState(false)
 
   const setH = (h) => {
     heightRef.current = h
@@ -40,10 +67,19 @@ export default function NewsSheet({ onStartCefr }) {
       try {
         const list = await getActivePosts()
         if (!alive) return
-        setPosts(list.length ? list : fallbackPosts())
+        if (list.length) {
+          setPosts(list)
+          setFromApi(true)
+          // API postlar kelganda sheetni ochib ko‘rsatish
+          setH(Math.round(window.innerHeight * EXPANDED_RATIO))
+        } else {
+          setPosts(fallbackPosts())
+          setFromApi(false)
+        }
       } catch {
         if (!alive) return
         setPosts(fallbackPosts())
+        setFromApi(false)
       } finally {
         if (alive) setLoading(false)
       }
@@ -155,14 +191,24 @@ export default function NewsSheet({ onStartCefr }) {
 
         {!loading && (
           <div className="space-y-4">
+            {fromApi && (
+              <p className="text-[11px] text-white/35 px-1 -mt-1 mb-1">
+                Yangiliklar
+              </p>
+            )}
             {posts.map((post) => {
-              const showCta = Boolean(post.url || post.ctaText || post._startCefr || post._local)
+              const showCta = Boolean(post.url || ((post._startCefr || post._local) && post.ctaText))
               return (
                 <article
                   key={post.id}
                   className="rounded-[1.35rem] bg-[#1a2026] border border-white/[0.07] overflow-hidden"
                 >
                   <div className="px-4 pt-4 pb-3">
+                    {post.badgeText && (
+                      <span className="inline-block text-[10px] font-bold tracking-wider px-2 py-0.5 rounded-md mb-2.5 text-neon bg-neon/15">
+                        {post.badgeText}
+                      </span>
+                    )}
                     <h3 className="font-black text-[1.15rem] leading-snug text-white tracking-tight">
                       {post.title}
                     </h3>
@@ -173,22 +219,7 @@ export default function NewsSheet({ onStartCefr }) {
                     ) : null}
                   </div>
 
-                  {post.imageUrl && (
-                    <div className="px-3">
-                      <div className="relative rounded-2xl overflow-hidden aspect-[16/10] bg-[#0e1318]">
-                        <img
-                          src={post.imageUrl}
-                          alt=""
-                          loading="lazy"
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            e.currentTarget.style.display = 'none'
-                          }}
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/35 to-transparent pointer-events-none" />
-                      </div>
-                    </div>
-                  )}
+                  <PostImage src={post.imageUrl} />
 
                   {showCta && (
                     <div className="px-4 py-3.5">

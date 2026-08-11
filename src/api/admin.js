@@ -210,3 +210,40 @@ export async function saveThresholdsToSettings(thresholds) {
   }
   return results
 }
+
+/* —— Postlar (yangilik / reklama) —— */
+
+export async function fetchPosts(params = {}) {
+  const data = await api.get('/post/getlist', {
+    search: params.search,
+    activeOnly: params.activeOnly ?? false,
+    publishedOnly: params.publishedOnly,
+    page: params.page ?? 1,
+    pageSize: params.pageSize ?? 50,
+  })
+  return unwrapPaged(data)
+}
+
+export async function fetchPostActionTypes() {
+  return unwrapList(await api.get('/post/getactiontypes'))
+}
+
+export async function createPost(body) {
+  return api.post('/post/create', body)
+}
+
+export async function updatePost(body) {
+  return api.post('/post/update', body)
+}
+
+export async function deletePost(id) {
+  return api.post('/post/delete', { id })
+}
+
+/** Kontent rasm: category=posts → relativePath → imagePath */
+export async function uploadPostImage(file) {
+  const fd = new FormData()
+  fd.append('category', 'posts')
+  fd.append('file', file)
+  return api.upload('/images/uploadcontent', fd)
+}

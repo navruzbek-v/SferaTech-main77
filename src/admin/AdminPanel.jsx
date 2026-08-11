@@ -7,11 +7,13 @@ import {
 } from 'lucide-react'
 import { useApp } from '../App.jsx'
 import DocxParser from './DocxParser.jsx'
+import PostsTab from './PostsTab.jsx'
 import * as T from './tabs.jsx'
 
 // Bo'limlar ro'yxati — parser + 23 ta admin funksiyasi
 const SECTIONS = [
   { key: 'parser', label: '.docx Test Parseri', icon: FileScan, comp: DocxParser, group: 'Asosiy' },
+  { key: 'posts', label: 'Postlar', icon: Megaphone, comp: PostsTab, group: 'Kontent' },
   { key: 'users', label: 'Foydalanuvchilar nazorati', icon: Users, comp: T.UsersTab, group: 'Boshqaruv' },
   { key: 'subs', label: 'Imtihon natijalari va Baholash', icon: ClipboardList, comp: T.SubmissionsTab, group: 'Boshqaruv' },
   { key: 'content', label: 'Kontent Menejeri', icon: FolderCog, comp: T.ContentTab, group: 'Kontent' },
