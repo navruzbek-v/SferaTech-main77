@@ -71,6 +71,25 @@ export function haptic(type = 'light') {
   } catch { /* */ }
 }
 
+/** Tashqi http(s) — Mini App ichida openLink */
+export function openExternalLink(url) {
+  const href = String(url || '').trim()
+  if (!/^https?:\/\//i.test(href)) return false
+  const tg = getTelegram()
+  try {
+    if (tg?.openLink) {
+      tg.openLink(href)
+      return true
+    }
+  } catch { /* */ }
+  try {
+    window.open(href, '_blank', 'noopener,noreferrer')
+    return true
+  } catch {
+    return false
+  }
+}
+
 /** Speaking: MediaRecorder + getUserMedia (TMA WebView cheklovi) */
 export async function canRecordAudio() {
   if (!navigator?.mediaDevices?.getUserMedia || typeof MediaRecorder === 'undefined') {

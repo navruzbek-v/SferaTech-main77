@@ -1,13 +1,14 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { ChevronDown, ChevronUp } from 'lucide-react'
-import { HOME_NEWS } from '../data/homeNews.js'
+import { ChevronDown, ChevronUp, Loader2 } from 'lucide-react'
+import { fallbackPosts, getActivePosts } from '../api/posts.js'
+import { openExternalLink, haptic } from '../lib/telegram.js'
 
 const PEEK = 78
 const EXPANDED_RATIO = 0.88
 
 /**
- * Pastki sheet — faqat Arabosfera kartasi.
- * «Imtihon topshirish» → CEFR.
+ * Pastki sheet — GET /post/getactive feed.
+ * CTA: url bo‘lsa → Telegram.WebApp.openLink
  */
 export default function NewsSheet({ onStartCefr }) {
   const sheetRef = useRef(null)
@@ -18,8 +19,8 @@ export default function NewsSheet({ onStartCefr }) {
   const [height, setHeight] = useState(PEEK)
   const [maxH, setMaxH] = useState(() => Math.round(window.innerHeight * EXPANDED_RATIO))
   const [draggingUi, setDraggingUi] = useState(false)
-
-  const card = HOME_NEWS[0]
+  const [posts, setPosts] = useState(() => fallbackPosts())
+  const [loading, setLoading] = useState(true)
 
   const setH = (h) => {
     heightRef.current = h
@@ -30,6 +31,24 @@ export default function NewsSheet({ onStartCefr }) {
     const onResize = () => setMaxH(Math.round(window.innerHeight * EXPANDED_RATIO))
     window.addEventListener('resize', onResize)
     return () => window.removeEventListener('resize', onResize)
+  }, [])
+
+  useEffect(() => {
+    let alive = true
+    ;(async () => {
+      setLoading(true)
+      try {
+        const list = await getActivePosts()
+        if (!alive) return
+        setPosts(list.length ? list : fallbackPosts())
+      } catch {
+        if (!alive) return
+        setPosts(fallbackPosts())
+      } finally {
+        if (alive) setLoading(false)
+      }
+    })()
+    return () => { alive = false }
   }, [])
 
   const expanded = height > PEEK + 40
@@ -72,9 +91,16 @@ export default function NewsSheet({ onStartCefr }) {
     snap(heightRef.current)
   }
 
-  const startExam = (e) => {
+  const onCta = (e, post) => {
     e?.stopPropagation?.()
-    onStartCefr?.()
+    haptic('light')
+    if (post.url) {
+      openExternalLink(post.url)
+      return
+    }
+    if (post._startCefr || post._local) {
+      onStartCefr?.()
+    }
   }
 
   return (
@@ -121,53 +147,64 @@ export default function NewsSheet({ onStartCefr }) {
           if (!expanded) e.preventDefault()
         }}
       >
-        {card && (
-          <article className="rounded-[1.35rem] bg-[#1a2026] border border-white/[0.07] overflow-hidden">
-            <div className="px-4 pt-4 pb-3">
-                <span
-                className="inline-block text-[10px] font-bold tracking-wider px-2 py-0.5 rounded-md mb-2.5"
-                style={{
-                  color: card.accent || '#3DDC97',
-                  background: `${card.accent || '#3DDC97'}22`,
-                }}
-              >
-                {card.tag}
-              </span>
-              <h3 className="font-black text-[1.15rem] leading-snug text-white tracking-tight">
-                {card.title}
-              </h3>
-              <p className="text-[13px] text-white/50 leading-relaxed mt-1.5">
-                {card.body}
-              </p>
-            </div>
+        {loading && (
+          <div className="flex justify-center py-8 text-white/40">
+            <Loader2 className="animate-spin" size={22} />
+          </div>
+        )}
 
-            {card.image && (
-              <div className="px-3">
-                <div className="relative rounded-2xl overflow-hidden aspect-[16/10] bg-[#0e1318]">
-                  <img
-                    src={card.image}
-                    alt=""
-                    loading="lazy"
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      e.currentTarget.style.display = 'none'
-                    }}
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/35 to-transparent pointer-events-none" />
-                </div>
-              </div>
-            )}
+        {!loading && (
+          <div className="space-y-4">
+            {posts.map((post) => {
+              const showCta = Boolean(post.url || post.ctaText || post._startCefr || post._local)
+              return (
+                <article
+                  key={post.id}
+                  className="rounded-[1.35rem] bg-[#1a2026] border border-white/[0.07] overflow-hidden"
+                >
+                  <div className="px-4 pt-4 pb-3">
+                    <h3 className="font-black text-[1.15rem] leading-snug text-white tracking-tight">
+                      {post.title}
+                    </h3>
+                    {post.body ? (
+                      <p className="text-[13px] text-white/50 leading-relaxed mt-1.5 whitespace-pre-wrap">
+                        {post.body}
+                      </p>
+                    ) : null}
+                  </div>
 
-            <div className="px-4 py-3.5">
-              <button
-                type="button"
-                onClick={startExam}
-                className="inline-flex items-center justify-center px-5 py-2.5 rounded-full text-[13px] font-bold bg-neon text-black active:scale-[0.98] transition"
-              >
-                {card.cta || 'Imtihon topshirish'}
-              </button>
-            </div>
-          </article>
+                  {post.imageUrl && (
+                    <div className="px-3">
+                      <div className="relative rounded-2xl overflow-hidden aspect-[16/10] bg-[#0e1318]">
+                        <img
+                          src={post.imageUrl}
+                          alt=""
+                          loading="lazy"
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none'
+                          }}
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/35 to-transparent pointer-events-none" />
+                      </div>
+                    </div>
+                  )}
+
+                  {showCta && (
+                    <div className="px-4 py-3.5">
+                      <button
+                        type="button"
+                        onClick={(e) => onCta(e, post)}
+                        className="inline-flex items-center justify-center px-5 py-2.5 rounded-full text-[13px] font-bold bg-neon text-black active:scale-[0.98] transition"
+                      >
+                        {post.ctaText || (post.url ? 'Batafsil' : 'Imtihon topshirish')}
+                      </button>
+                    </div>
+                  )}
+                </article>
+              )
+            })}
+          </div>
         )}
       </div>
     </div>
