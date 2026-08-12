@@ -9,6 +9,7 @@ import TfngItem from './TfngItem.jsx'
 import SpeakingProsCons from './SpeakingProsCons.jsx'
 import SpeakingRecorder from '../SpeakingRecorder.jsx'
 import ListeningAudioPlayer from './ListeningAudioPlayer.jsx'
+import { EexamMcq, EexamPassage, EE } from './AttanalEexamShell.jsx'
 
 function isGapFillPart(part) {
   const items = part?.items || []
@@ -37,14 +38,15 @@ function hasListeningAudio(part) {
   return Boolean(part?.audioUrl || part?.audioScript)
 }
 
-function AudioBlock({ part }) {
+function AudioBlock({ part, maxPlays = 2, variant = 'default' }) {
   if (!hasListeningAudio(part)) return null
   return (
     <ListeningAudioPlayer
       audioUrl={part.audioUrl}
       audioScript={part.audioScript}
       title="Audio"
-      maxPlays={2}
+      maxPlays={maxPlays}
+      variant={variant}
     />
   )
 }
@@ -52,6 +54,7 @@ function AudioBlock({ part }) {
 /**
  * answers: { [itemId]: answerBody }
  * onAnswer(item, body) — body: selectedOptionId | yesNoValue | tfngValue | audio
+ * variant: 'default' | 'eexam'
  */
 export default function ExamPartView({
   part,
@@ -61,14 +64,17 @@ export default function ExamPartView({
   onClearAnswer,
   speakingExtras,
   fontSize = 22,
+  listeningMaxPlays = 2,
+  variant = 'default',
 }) {
   if (!part) return null
   const items = part.items || []
+  const eexam = variant === 'eexam'
 
   if (isGapFillPart(part)) {
     return (
       <div className="space-y-4">
-        <AudioBlock part={part} />
+        <AudioBlock part={part} maxPlays={listeningMaxPlays} />
         <GapFillPassage
           passageText={part.passageText}
           items={items}
@@ -91,7 +97,7 @@ export default function ExamPartView({
   if (isYesNoPart(part)) {
     return (
       <div className="space-y-4">
-        <AudioBlock part={part} />
+        <AudioBlock part={part} maxPlays={listeningMaxPlays} />
         <YesNoPart
           items={items}
           answers={answers}
@@ -108,10 +114,24 @@ export default function ExamPartView({
       || (part.partNumber === 3 || items.length <= 6 ? 'list' : 'grid')
     return (
       <div className="space-y-4">
-        <AudioBlock part={part} />
-        {/* Part 3 da matn har item ichida — umumiy sticky kerak emas */}
-        {part.passageText && !items.some((it) => (it.promptText || '').length > 40) && (
+        <AudioBlock part={part} maxPlays={listeningMaxPlays} />
+        {part.passageText && !items.some((it) => (it.promptText || '').length > 40) && !eexam && (
           <StickyPassage text={part.passageText} fontSize={fontSize} />
+        )}
+        {part.passageText && eexam && !items.some((it) => (it.promptText || '').length > 40) && (
+          <div
+            className="rounded-lg border p-3 sm:p-4"
+            style={{ borderColor: EE.line, background: '#FAFAFA' }}
+            dir="rtl"
+            lang="ar"
+          >
+            <p
+              className="arabic leading-[2] whitespace-pre-wrap text-right"
+              style={{ fontSize: `${fontSize}px`, color: EE.ink, WebkitTextFillColor: EE.ink }}
+            >
+              {part.passageText}
+            </p>
+          </div>
         )}
         <ExclusiveMatchPart
           items={items}
@@ -134,21 +154,43 @@ export default function ExamPartView({
     )
   }
 
-  // Oddiy / aralash part (MCQ, TFNG, YesNo, Speaking, matn)
   const showPassage = part.passageText && !items.some((i) => Number(i.itemTypeId) === ITEM_TYPE.Speaking)
-  // Part 4/5: katta matn savollar bilan birga — sticky qilib doim ko‘rinsin
   const pin = Boolean(part.pinPassage) || Number(part.partNumber) >= 4
 
+  if (eexam && showPassage) {
+    return (
+      <div className="flex flex-col min-h-full">
+        <AudioBlock part={part} maxPlays={listeningMaxPlays} variant="eexam" />
+        <EexamPassage text={part.passageText} fontSize={fontSize} />
+        <div className="flex-1">
+          {items.map((item) => (
+            <ItemView
+              key={item.id}
+              item={item}
+              part={part}
+              answered={answers?.[item.id]}
+              disabled={disabled}
+              onAnswer={onAnswer}
+              speakingExtras={speakingExtras}
+              fontSize={fontSize}
+              variant="eexam"
+            />
+          ))}
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div className="space-y-4">
-      <AudioBlock part={part} />
-      {part.instruction && (
+    <div className={eexam ? '' : 'space-y-4'}>
+      <AudioBlock part={part} maxPlays={listeningMaxPlays} variant={eexam ? 'eexam' : 'default'} />
+      {part.instruction && !eexam && (
         <div className="rounded-xl border border-neon/30 bg-neon/5 px-3 py-2.5 text-sm text-white/80">
           {part.instruction}
         </div>
       )}
 
-      {showPassage && (
+      {showPassage && !eexam && (
         <div
           className={
             pin
@@ -175,14 +217,16 @@ export default function ExamPartView({
           onAnswer={onAnswer}
           speakingExtras={speakingExtras}
           fontSize={fontSize}
+          variant={variant}
         />
       ))}
     </div>
   )
 }
 
-function ItemView({ item, part, answered, disabled, onAnswer, speakingExtras, fontSize = 18 }) {
+function ItemView({ item, part, answered, disabled, onAnswer, speakingExtras, fontSize = 18, variant = 'default' }) {
   const type = answerTypeForItem(item)
+  const eexam = variant === 'eexam'
 
   if (type === 'audio') {
     const timing = speakingTimingFor(item.displayNumber)
@@ -235,6 +279,22 @@ function ItemView({ item, part, answered, disabled, onAnswer, speakingExtras, fo
 
   const options = item.options || part.options || []
   const answerType = type === 'matching' || item.usesExclusiveOptions ? 'matching' : 'option'
+  if (eexam) {
+    return (
+      <EexamMcq
+        item={item}
+        options={options}
+        selectedOptionId={answered?.selectedOptionId}
+        disabled={disabled}
+        fontSize={fontSize}
+        onSelect={(opt) => onAnswer(item, {
+          itemId: item.id,
+          answerType,
+          selectedOptionId: opt.id,
+        })}
+      />
+    )
+  }
   return (
     <McqOptions
       item={item}

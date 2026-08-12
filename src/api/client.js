@@ -45,7 +45,7 @@ function qs(params = {}) {
   return s ? `?${s}` : ''
 }
 
-async function parseError(res) {
+export async function parseError(res) {
   let detail = res.statusText
   let code
   try {

@@ -16,6 +16,10 @@ yarn-error.log*
 .DS_Store
 .vscode/
 .idea/
+.cursor/
+
+# Local upload scratch
+netlify-upload/
 
 # Env
 .env

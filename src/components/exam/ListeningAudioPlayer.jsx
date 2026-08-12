@@ -1,16 +1,18 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { Headphones, Pause, Play } from 'lucide-react'
 import { Card } from '../../ui.jsx'
+import { EexamPlayButton, EE } from './AttanalEexamShell.jsx'
 
 /**
  * Listening — haqiqiy audio fayl (audioUrl).
- * Savollardan oldin tinglash uchun.
+ * variant: 'default' | 'eexam'
  */
 export default function ListeningAudioPlayer({
   audioUrl,
   audioScript,
-    title = 'Listening audio',
+  title = 'Listening audio',
   maxPlays = 2,
+  variant = 'default',
 }) {
   const audioRef = useRef(null)
   const [playing, setPlaying] = useState(false)
@@ -38,14 +40,6 @@ export default function ListeningAudioPlayer({
     try { window.speechSynthesis?.cancel() } catch { /* */ }
   }, [])
 
-  if (!audioUrl && !audioScript) {
-    return (
-      <Card className="p-4 border-amber-500/40 bg-amber-500/10">
-        <p className="text-amber-100 text-sm font-medium">Audio yo‘q</p>
-      </Card>
-    )
-  }
-
   const onPlay = async () => {
     const a = audioRef.current
     if (audioUrl && a) {
@@ -64,14 +58,13 @@ export default function ListeningAudioPlayer({
         await a.play()
         setPlaying(true)
         setError(null)
-      } catch (e) {
+      } catch {
         setError('Audio ijro etilmadi — brauzer ruxsatini tekshiring')
         setPlaying(false)
       }
       return
     }
 
-    // Fallback TTS (faqat fayl bo‘lmasa)
     if (!audioScript || playsLeft <= 0) return
     if (playing) {
       window.speechSynthesis?.cancel()
@@ -91,26 +84,61 @@ export default function ListeningAudioPlayer({
     window.speechSynthesis?.speak(u)
   }
 
+  if (!audioUrl && !audioScript) {
+    if (variant === 'eexam') {
+      return (
+        <p className="text-center text-xs py-3" style={{ color: EE.muted }}>Audio yo‘q</p>
+      )
+    }
+    return (
+      <Card className="p-4 border-amber-500/40 bg-amber-500/10">
+        <p className="text-amber-100 text-sm font-medium">Audio yo‘q</p>
+      </Card>
+    )
+  }
+
+  const audioEl = audioUrl ? (
+    <audio
+      ref={audioRef}
+      src={audioUrl}
+      preload="auto"
+      onTimeUpdate={(e) => {
+        const el = e.currentTarget
+        if (el.duration) setProgress(el.currentTime / el.duration)
+      }}
+      onEnded={() => {
+        setPlaying(false)
+        setProgress(1)
+        startedRef.current = false
+      }}
+      onError={() => setError('Audio fayl topilmadi')}
+    />
+  ) : null
+
+  if (variant === 'eexam') {
+    return (
+      <div>
+        {audioEl}
+        <EexamPlayButton
+          playing={playing}
+          disabled={!playing && playsLeft <= 0}
+          onClick={onPlay}
+          playsLeft={playsLeft}
+          maxPlays={maxPlays}
+        />
+        {progress > 0 && progress < 1 && (
+          <div className="mx-6 mb-2 h-1 rounded-full overflow-hidden" style={{ background: EE.barTrack }}>
+            <div className="h-full rounded-full" style={{ width: `${Math.round(progress * 100)}%`, background: EE.orange }} />
+          </div>
+        )}
+        {error && <p className="text-red-500 text-[10px] text-center pb-2">{error}</p>}
+      </div>
+    )
+  }
+
   return (
     <Card className="p-4 border-neon/40 bg-[#0d1a14]">
-      {audioUrl && (
-        <audio
-          ref={audioRef}
-          src={audioUrl}
-          preload="auto"
-          onTimeUpdate={(e) => {
-            const el = e.currentTarget
-            if (el.duration) setProgress(el.currentTime / el.duration)
-          }}
-          onEnded={() => {
-            setPlaying(false)
-            setProgress(1)
-            startedRef.current = false
-          }}
-          onError={() => setError('Audio fayl topilmadi')}
-        />
-      )}
-
+      {audioEl}
       <div className="flex items-center gap-3 mb-3">
         <div className="w-12 h-12 rounded-2xl bg-neon/25 text-neon flex items-center justify-center shrink-0">
           <Headphones size={24} />
@@ -122,14 +150,9 @@ export default function ListeningAudioPlayer({
           </p>
         </div>
       </div>
-
       <div className="h-2 rounded-full bg-white/10 overflow-hidden mb-3">
-        <div
-          className="h-full bg-neon transition-all"
-          style={{ width: `${Math.round(progress * 100)}%` }}
-        />
+        <div className="h-full bg-neon transition-all" style={{ width: `${Math.round(progress * 100)}%` }} />
       </div>
-
       <button
         type="button"
         onClick={onPlay}
@@ -144,7 +167,6 @@ export default function ListeningAudioPlayer({
       >
         {playing ? <Pause size={20} /> : <Play size={20} />}
       </button>
-
       {error && <p className="text-red-300 text-xs mt-2 text-center">{error}</p>}
     </Card>
   )

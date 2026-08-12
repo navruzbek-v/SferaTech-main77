@@ -1,4 +1,4 @@
-import { api, unwrapList, unwrapPaged, request } from './client.js'
+import { api, unwrapList, unwrapPaged, request, getApiBase, parseError } from './client.js'
 import { mapAdminUser, mapQuestions, mapExamResult, mapQuestion } from './mappers.js'
 
 export async function fetchUsers(params = {}) {
@@ -211,21 +211,93 @@ export async function saveThresholdsToSettings(thresholds) {
   return results
 }
 
+/* —— At-Tanal kontent (admin) — /attanalcontent/* —— */
+
+export async function fetchAttanalSkills() {
+  return unwrapList(await api.get('/attanalcontent/getskills'))
+}
+
+export async function fetchAttanalBlueprint() {
+  return api.get('/attanalcontent/getblueprint')
+}
+
+export async function fetchAttanalInventory() {
+  return unwrapList(await api.get('/attanalcontent/getinventory'))
+}
+
+export async function fetchAttanalBlocks(params = {}) {
+  return unwrapList(await api.get('/attanalcontent/getblocks', params))
+}
+
+export async function fetchAttanalBlockById(id) {
+  return api.get('/attanalcontent/getblockbyid', { id })
+}
+
+export async function updateAttanalBlock(id, body) {
+  return api.post(`/attanalcontent/updateblock?id=${encodeURIComponent(id)}`, body)
+}
+
+export async function deleteAttanalBlock(body) {
+  return api.post('/attanalcontent/deleteblock', body)
+}
+
+export async function fetchAttanalEntries(params = {}) {
+  return unwrapList(await api.get('/attanalcontent/getentries', params))
+}
+
+export async function fetchAttanalEntryById(id) {
+  return api.get('/attanalcontent/getentrybyid', { id })
+}
+
+export async function updateAttanalEntry(id, body) {
+  return api.post(`/attanalcontent/updateentry?id=${encodeURIComponent(id)}`, body)
+}
+
+export async function deleteAttanalEntry(body) {
+  return api.post('/attanalcontent/deleteentry', body)
+}
+
+export async function saveAttanalGrammarVocabPart1(body) {
+  return api.post('/attanalcontent/savegrammarvocabpart1', body)
+}
+
+export async function saveAttanalReadingPart(part, body) {
+  return api.post(`/attanalcontent/savereadingpart${part}`, body)
+}
+
+export async function saveAttanalListeningPart(part, body) {
+  return api.post(`/attanalcontent/savelisteningpart${part}`, body)
+}
+
+export async function saveAttanalWritingPart(part, body) {
+  return api.post(`/attanalcontent/savewritingpart${part}`, body)
+}
+
+export async function saveAttanalSpeakingPart(part, body) {
+  return api.post(`/attanalcontent/savespeakingpart${part}`, body)
+}
+
+export async function saveAttanalBatch(body) {
+  return api.post('/attanalcontent/saveattanalbatch', body)
+}
+
 /* —— Postlar (yangilik / reklama) —— */
 
 export async function fetchPosts(params = {}) {
-  const data = await api.get('/post/getlist', {
-    search: params.search,
-    activeOnly: params.activeOnly ?? false,
-    publishedOnly: params.publishedOnly,
-    page: params.page ?? 1,
-    pageSize: params.pageSize ?? 50,
-  })
+  const query = {
+    Search: params.search,
+    PublishedOnly: params.publishedOnly,
+    Page: params.page ?? 1,
+    PageSize: params.pageSize ?? 50,
+  }
+  // activeOnly=false faqat o‘chirilganlarni qaytaradi — yubormaslik
+  if (params.activeOnly === true) query.ActiveOnly = true
+  const data = await api.get('/post/getlist', query)
   return unwrapPaged(data)
 }
 
 export async function fetchPostActionTypes() {
-  return unwrapList(await api.get('/post/getactiontypes'))
+  return []
 }
 
 export async function createPost(body) {
@@ -240,10 +312,80 @@ export async function deletePost(id) {
   return api.post('/post/delete', { id })
 }
 
+function normalizeUploadedPath(raw) {
+  const fromUrl = String(raw?.url ?? raw?.Url ?? '')
+  const fromRel = String(raw?.relativePath ?? raw?.RelativePath ?? '')
+  const pick = fromRel || fromUrl
+  const s = pick
+    .replace(/^https?:\/\/[^/]+\//i, '')
+    .replace(/^\/+/, '')
+    .replace(/\\/g, '/')
+  return s || null
+}
+
+function safeUploadFileName(file) {
+  const ext = (String(file.name || '').match(/\.[a-z0-9]{1,8}$/i)?.[0] || '.jpg').toLowerCase()
+  const id = (typeof crypto !== 'undefined' && crypto.randomUUID)
+    ? crypto.randomUUID()
+    : `${Date.now()}-${Math.random().toString(16).slice(2)}`
+  return `${id}${ext}`
+}
+
 /** Kontent rasm: category=posts → relativePath → imagePath */
 export async function uploadPostImage(file) {
+  const safeName = safeUploadFileName(file)
+  const renamed = new File([file], safeName, { type: file.type || 'image/jpeg' })
   const fd = new FormData()
   fd.append('category', 'posts')
-  fd.append('file', file)
-  return api.upload('/images/uploadcontent', fd)
+  fd.append('file', renamed)
+
+  const token = localStorage.getItem('as_access') || localStorage.getItem('as_token')
+  const headers = { Accept: 'application/json' }
+  if (token) headers.Authorization = `Bearer ${token}`
+
+  const bases = [getApiBase(), 'https://arabosfera.onrender.com']
+  let lastErr = null
+
+  for (const base of bases) {
+    try {
+      const res = await fetch(`${base.replace(/\/$/, '')}/images/uploadcontent`, {
+        method: 'POST',
+        headers,
+        body: fd,
+      })
+      if ([502, 503, 504].includes(res.status)) continue
+      if (!res.ok) throw await parseError(res)
+      const data = await res.json()
+      const raw = data?.data && typeof data.data === 'object' ? data.data : data
+      const relativePath = normalizeUploadedPath(raw)
+      if (!relativePath) throw new Error('relativePath qaytmadi')
+
+      const absoluteUrl = raw?.url || raw?.Url || null
+      // Fayl Render diskida — ba’zan biroz kechikadi; probe soft
+      const probeUrl = absoluteUrl && /^https?:\/\//i.test(absoluteUrl)
+        ? absoluteUrl
+        : `https://arabosfera.onrender.com/${relativePath.split('/').map(encodeURIComponent).join('/')}`
+
+      let reachable = false
+      for (let i = 0; i < 3; i += 1) {
+        try {
+          const probe = await fetch(probeUrl, { cache: 'no-store', method: 'GET' })
+          if (probe.ok) { reachable = true; break }
+        } catch { /* */ }
+        await new Promise((r) => setTimeout(r, 600 * (i + 1)))
+      }
+
+      return {
+        relativePath,
+        url: absoluteUrl || probeUrl,
+        reachable,
+        warning: reachable
+          ? null
+          : 'Rasm saqlandi, lekin hozircha ochilmayapti. Bir necha soniyadan keyin qayta tekshiring yoki qayta yuklang.',
+      }
+    } catch (e) {
+      lastErr = e
+    }
+  }
+  throw lastErr || new Error('Rasm yuklanmadi')
 }

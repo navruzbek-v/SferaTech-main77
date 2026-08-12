@@ -6,14 +6,14 @@ import { Head, Toggle } from './parts.jsx'
 import * as AdminAPI from '../api/admin.js'
 import { resolveMediaUrl } from '../api/posts.js'
 
+/** Swagger CreatePostRequest / UpdatePostRequest bo‘yicha */
 const emptyForm = () => ({
   id: null,
   title: '',
   body: '',
   imagePath: '',
   ctaText: '',
-  actionTypeId: 1,
-  actionPayload: '',
+  url: '',
   sortOrder: 10,
   isPublished: true,
   isActive: true,
@@ -21,27 +21,42 @@ const emptyForm = () => ({
   endsAt: '',
 })
 
+function buildPayload(form) {
+  const title = String(form.title || '').trim()
+  const url = String(form.url || '').trim()
+  return {
+    title,
+    body: String(form.body || '').trim() || null,
+    imagePath: form.imagePath || null,
+    ctaText: String(form.ctaText || '').trim() || null,
+    url: url && /^https?:\/\//i.test(url) ? url : null,
+    sortOrder: Number(form.sortOrder) || 0,
+    isPublished: Boolean(form.isPublished),
+    startsAt: form.startsAt ? new Date(form.startsAt).toISOString() : null,
+    endsAt: form.endsAt ? new Date(form.endsAt).toISOString() : null,
+  }
+}
+
 export default function PostsTab() {
   const app = useApp()
   const fileRef = useRef(null)
   const [items, setItems] = useState([])
-  const [actionTypes, setActionTypes] = useState([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [form, setForm] = useState(emptyForm)
   const [editing, setEditing] = useState(false)
+  const [lastError, setLastError] = useState('')
 
   const load = async () => {
     setLoading(true)
     try {
-      const [page, types] = await Promise.all([
-        AdminAPI.fetchPosts({ pageSize: 100, activeOnly: false }),
-        AdminAPI.fetchPostActionTypes().catch(() => []),
-      ])
+      const page = await AdminAPI.fetchPosts({ pageSize: 100, activeOnly: false })
       setItems(page.items || [])
-      setActionTypes(types || [])
+      setLastError('')
     } catch (e) {
-      app.notify(e.message || 'Postlar yuklanmadi', 'error')
+      const msg = e.message || 'Postlar yuklanmadi'
+      setLastError(msg)
+      app.notify(msg, 'error')
     } finally {
       setLoading(false)
     }
@@ -54,6 +69,7 @@ export default function PostsTab() {
   const openNew = () => {
     setForm(emptyForm())
     setEditing(true)
+    setLastError('')
   }
 
   const openEdit = (p) => {
@@ -63,8 +79,7 @@ export default function PostsTab() {
       body: p.body || '',
       imagePath: p.imagePath || '',
       ctaText: p.ctaText || '',
-      actionTypeId: p.actionTypeId ?? 1,
-      actionPayload: p.actionPayload || p.url || '',
+      url: p.url || p.actionPayload || '',
       sortOrder: p.sortOrder ?? 10,
       isPublished: Boolean(p.isPublished),
       isActive: p.isActive !== false,
@@ -72,6 +87,7 @@ export default function PostsTab() {
       endsAt: p.endsAt ? String(p.endsAt).slice(0, 16) : '',
     })
     setEditing(true)
+    setLastError('')
   }
 
   const onUpload = async (e) => {
@@ -82,10 +98,17 @@ export default function PostsTab() {
       const meta = await AdminAPI.uploadPostImage(file)
       const path = meta?.relativePath || meta?.RelativePath || meta?.url || meta?.Url
       if (!path) throw new Error('relativePath qaytmadi')
-      set('imagePath', String(path).replace(/^\//, ''))
-      app.notify('Rasm yuklandi ✓')
+      set('imagePath', String(path).replace(/^\.\//, '').replace(/^\/+/, ''))
+      if (meta?.warning) {
+        setLastError(meta.warning)
+        app.notify(meta.warning, 'info')
+      } else {
+        app.notify('Rasm yuklandi ✓ — endi Saqlash bosing')
+      }
     } catch (err) {
-      app.notify(err.message || 'Rasm yuklash xatosi', 'error')
+      const msg = err.message || 'Rasm yuklash xatosi'
+      setLastError(msg)
+      app.notify(msg, 'error')
     }
   }
 
@@ -96,21 +119,15 @@ export default function PostsTab() {
       return
     }
     setSaving(true)
+    setLastError('')
     try {
-      const payload = {
-        title,
-        body: String(form.body || '').trim() || null,
-        imagePath: form.imagePath || null,
-        ctaText: String(form.ctaText || '').trim() || null,
-        actionTypeId: Number(form.actionTypeId) || 1,
-        actionPayload: String(form.actionPayload || '').trim() || null,
-        sortOrder: Number(form.sortOrder) || 0,
-        isPublished: Boolean(form.isPublished),
-        startsAt: form.startsAt ? new Date(form.startsAt).toISOString() : null,
-        endsAt: form.endsAt ? new Date(form.endsAt).toISOString() : null,
-      }
+      const payload = buildPayload(form)
       if (form.id) {
-        await AdminAPI.updatePost({ ...payload, id: form.id, isActive: Boolean(form.isActive) })
+        await AdminAPI.updatePost({
+          ...payload,
+          id: form.id,
+          isActive: Boolean(form.isActive),
+        })
         app.notify('Post yangilandi ✓')
       } else {
         await AdminAPI.createPost(payload)
@@ -120,7 +137,9 @@ export default function PostsTab() {
       setForm(emptyForm())
       await load()
     } catch (e) {
-      app.notify(e.message || 'Saqlash xatosi', 'error')
+      const msg = e.message || 'Saqlash xatosi'
+      setLastError(msg)
+      app.notify(msg, 'error')
     } finally {
       setSaving(false)
     }
@@ -133,24 +152,35 @@ export default function PostsTab() {
       app.notify('O‘chirildi')
       await load()
     } catch (e) {
-      app.notify(e.message || 'O‘chirish xatosi', 'error')
+      const msg = e.message || 'O‘chirish xatosi'
+      setLastError(msg)
+      app.notify(msg, 'error')
     }
   }
 
   const previewUrl = form.imagePath ? resolveMediaUrl(form.imagePath) : null
-  const openUrlType = actionTypes.find((t) => /url|link|open/i.test(`${t.code} ${t.nameEn} ${t.nameUz}`))
 
   return (
     <div>
       <Head
         title="Postlar"
-        desc="Mini-app pastki feed: GET /post/getactive. Rasm: /images/uploadcontent (category=posts)."
+        desc="Rasmlar Render diskida. Deploy/restart dan keyin fayllar yo‘qolishi mumkin — qayta yuklang. Mini-app: GET /post/getactive."
         right={(
           <Button variant="primary" onClick={openNew}>
             <Plus size={15} /> Yangi post
           </Button>
         )}
       />
+
+      <div className="mb-4 max-w-2xl rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-100/90">
+        Agar rasm chiqmasa: postni oching → <b>Rasm yuklash</b> (ASCII nom bilan avtomatik) → <b>Saqlash</b>.
+        Eski path lar serverda 404 bo‘lishi mumkin (ephemeral disk).
+      </div>
+      {lastError ? (
+        <div className="mb-4 max-w-2xl rounded-xl border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-200 whitespace-pre-wrap">
+          {lastError}
+        </div>
+      ) : null}
 
       {editing && (
         <Card className="p-4 mb-5 space-y-3 max-w-2xl">
@@ -178,13 +208,13 @@ export default function PostsTab() {
             )}
           </div>
           {previewUrl && (
-            <img src={previewUrl} alt="" className="max-h-40 rounded-xl border border-line object-cover" onError={(e) => { e.currentTarget.style.display = 'none' }} />
+            <PostThumb src={previewUrl} className="max-h-40 w-full rounded-xl border border-line object-cover" />
           )}
           <div className="grid sm:grid-cols-2 gap-3">
             <input
               value={form.ctaText}
               onChange={(e) => set('ctaText', e.target.value)}
-              placeholder="CTA matn (Batafsil)"
+              placeholder="CTA matn (O‘qish)"
               className="w-full bg-base border border-line rounded-xl px-3 py-2.5 text-sm"
             />
             <input
@@ -195,31 +225,21 @@ export default function PostsTab() {
               className="w-full bg-base border border-line rounded-xl px-3 py-2.5 text-sm"
             />
           </div>
-          <div className="grid sm:grid-cols-2 gap-3">
-            <select
-              value={form.actionTypeId}
-              onChange={(e) => set('actionTypeId', +e.target.value)}
-              className="w-full bg-base border border-line rounded-xl px-3 py-2.5 text-sm"
-            >
-              {(actionTypes.length ? actionTypes : [
-                { id: 1, code: 'None', nameUz: 'Havolasiz' },
-                { id: openUrlType?.id || 2, code: 'OpenUrl', nameUz: 'Tashqi havola' },
-              ]).map((t) => (
-                <option key={t.id} value={t.id}>{t.nameUz || t.code || t.id}</option>
-              ))}
-            </select>
-            <input
-              value={form.actionPayload}
-              onChange={(e) => set('actionPayload', e.target.value)}
-              placeholder="https://t.me/... (actionPayload)"
-              className="w-full bg-base border border-line rounded-xl px-3 py-2.5 text-sm"
-            />
-          </div>
+          <input
+            value={form.url}
+            onChange={(e) => set('url', e.target.value)}
+            placeholder="url — https://t.me/... (ixtiyoriy)"
+            className="w-full bg-base border border-line rounded-xl px-3 py-2.5 text-sm"
+          />
           <div className="flex flex-wrap gap-4 items-center">
             <Toggle on={form.isPublished} onChange={(v) => set('isPublished', v)} label="Published (feedda)" />
             {form.id != null && (
               <Toggle on={form.isActive} onChange={(v) => set('isActive', v)} label="Active" />
             )}
+          </div>
+          <div className="grid sm:grid-cols-2 gap-3">
+            <input type="datetime-local" value={form.startsAt} onChange={(e) => set('startsAt', e.target.value)} className="w-full bg-base border border-line rounded-xl px-3 py-2.5 text-sm" />
+            <input type="datetime-local" value={form.endsAt} onChange={(e) => set('endsAt', e.target.value)} className="w-full bg-base border border-line rounded-xl px-3 py-2.5 text-sm" />
           </div>
           <div className="flex gap-2">
             <Button variant="primary" disabled={saving} onClick={save}>
@@ -236,11 +256,11 @@ export default function PostsTab() {
         <div className="space-y-2 max-w-2xl">
           {items.map((p) => {
             const img = p.imagePath ? resolveMediaUrl(p.imagePath) : null
-            const href = /^https?:\/\//i.test(p.actionPayload || '') ? p.actionPayload : null
+            const href = /^https?:\/\//i.test(p.url || '') ? p.url : null
             return (
               <Card key={p.id} className="p-3.5 flex gap-3 items-start">
                 {img ? (
-                  <img src={img} alt="" className="w-16 h-16 rounded-lg object-cover bg-base shrink-0" onError={(e) => { e.currentTarget.style.opacity = '0.2' }} />
+                  <PostThumb src={img} className="w-16 h-16 rounded-lg object-cover bg-base shrink-0" />
                 ) : (
                   <div className="w-16 h-16 rounded-lg bg-base border border-line shrink-0" />
                 )}
@@ -252,6 +272,9 @@ export default function PostsTab() {
                   </div>
                   <p className="font-semibold text-sm truncate">{p.title || '—'}</p>
                   {p.body ? <p className="text-xs text-slate-500 line-clamp-2 mt-0.5">{p.body}</p> : null}
+                  {p.imagePath ? (
+                    <p className="text-[10px] text-slate-500 truncate mt-0.5">{p.imagePath}</p>
+                  ) : null}
                   {href && (
                     <a href={href} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-[11px] text-tg mt-1">
                       <ExternalLink size={12} /> {href}
@@ -269,5 +292,25 @@ export default function PostsTab() {
         </div>
       )}
     </div>
+  )
+}
+
+function PostThumb({ src, className }) {
+  const [broken, setBroken] = useState(false)
+  useEffect(() => { setBroken(false) }, [src])
+  if (!src || broken) {
+    return (
+      <div className={`${className} flex items-center justify-center border border-amber-500/40 bg-amber-500/10 text-[9px] text-amber-200/90 text-center px-1`}>
+        404 · qayta yuklang
+      </div>
+    )
+  }
+  return (
+    <img
+      src={src}
+      alt=""
+      className={className}
+      onError={() => setBroken(true)}
+    />
   )
 }

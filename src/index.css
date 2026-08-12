@@ -80,6 +80,96 @@ input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
   background: rgba(61, 220, 151, 0.35);
   border-radius: 8px;
 }
+
+/* —— at-Tanal / eexam CBT —— */
+[data-attanal-exam] {
+  color-scheme: light;
+  --at-green: #F39200;
+  --at-green-deep: #E07E00;
+  --at-bg: #E8E8E8;
+  --at-surface: #FFFFFF;
+  --at-ink: #2A2A2A;
+  --at-muted: #6B6B6B;
+  --at-line: #C8C8C8;
+  background: var(--at-bg);
+  color: var(--at-ink);
+}
+
+[data-attanal-exam] .arabic,
+[data-attanal-exam] .q-text {
+  color: var(--at-ink) !important;
+  -webkit-text-fill-color: var(--at-ink);
+}
+
+[data-attanal-exam] .q-opt {
+  color: var(--at-ink) !important;
+  -webkit-text-fill-color: var(--at-ink);
+}
+
+[data-attanal-exam] .q-opt-correct {
+  color: var(--at-green-deep) !important;
+  -webkit-text-fill-color: var(--at-green-deep);
+}
+
+[data-attanal-exam] .bg-base,
+[data-attanal-exam] .bg-card,
+[data-attanal-exam] .bg-cardhi {
+  background-color: var(--at-surface) !important;
+}
+
+[data-attanal-exam] .border-line {
+  border-color: var(--at-line) !important;
+}
+
+[data-attanal-exam] .text-neon {
+  color: var(--at-green) !important;
+}
+
+[data-attanal-exam] .bg-neon {
+  background-color: var(--at-green) !important;
+  color: #fff !important;
+}
+
+[data-attanal-exam] .border-neon {
+  border-color: var(--at-green) !important;
+}
+
+[data-attanal-exam] .bg-neon\/10,
+[data-attanal-exam] .bg-neon\/15,
+[data-attanal-exam] .bg-neon\/20,
+[data-attanal-exam] .bg-neon\/25 {
+  background-color: rgba(243, 146, 0, 0.12) !important;
+}
+
+[data-attanal-exam] .text-white\/70,
+[data-attanal-exam] .text-white\/60,
+[data-attanal-exam] .text-white\/55,
+[data-attanal-exam] .text-white\/45,
+[data-attanal-exam] .text-white\/40,
+[data-attanal-exam] .text-white\/35,
+[data-attanal-exam] .text-white\/30 {
+  color: var(--at-muted) !important;
+}
+
+[data-attanal-exam] .hover\:bg-cardhi:hover,
+[data-attanal-exam] .hover\:bg-white\/5:hover {
+  background-color: #f3f3f3 !important;
+}
+
+[data-attanal-exam] .text-slate-300,
+[data-attanal-exam] .text-slate-400,
+[data-attanal-exam] .text-slate-500 {
+  color: var(--at-muted) !important;
+}
+
+[data-attanal-exam] ::selection {
+  background: rgba(243, 146, 0, 0.25);
+  color: var(--at-ink);
+}
+
+[data-attanal-exam] ::-webkit-scrollbar-thumb {
+  background: #c4c4c4;
+}
 .passage-scroll::-webkit-scrollbar-thumb:hover {
   background: rgba(61, 220, 151, 0.55);
 }

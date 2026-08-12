@@ -208,7 +208,7 @@ export default function SpeakingRecorder({
   if (phase === 'done' || initialDone.current) {
     return (
       <Card className="p-5 text-center space-y-3">
-        <p className="arabic q-text text-lg leading-relaxed">{promptText}</p>
+        {promptText ? <p className="arabic q-text text-lg leading-relaxed">{promptText}</p> : null}
         <p className="text-neon text-sm font-semibold">Gapirish yakunlandi ✓</p>
         {audioUrl && (
           <audio controls src={audioUrl} className="w-full mt-2" />
@@ -222,7 +222,7 @@ export default function SpeakingRecorder({
       <p className="text-[11px] uppercase tracking-wider text-white/40 font-bold mb-2">
         {phase === 'prep' ? 'Tayyorgarlik' : phase === 'record' ? 'Gapiring' : 'Tinglang'}
       </p>
-      <p className="arabic q-text text-xl leading-relaxed mb-4">{promptText}</p>
+      {promptText ? <p className="arabic q-text text-xl leading-relaxed mb-4">{promptText}</p> : null}
       {hints}
 
       {error && <p className="text-amber-300 text-xs mb-3">{error}</p>}

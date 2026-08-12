@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react'
-import { CreditCard, Loader2 } from 'lucide-react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
+import { Loader2 } from 'lucide-react'
 import { fallbackPosts, getActivePosts } from '../api/posts.js'
 import { openExternalLink, haptic } from '../lib/telegram.js'
 
@@ -8,48 +8,198 @@ function PostMedia({ src }) {
   useEffect(() => { setOk(Boolean(src)) }, [src])
   if (!src || !ok) return null
   return (
-    <div className="mt-3 rounded-[1.2rem] overflow-hidden bg-black/50 aspect-[16/10]">
-      <img
-        src={src}
-        alt=""
-        loading="lazy"
-        decoding="async"
-        className="w-full h-full object-cover"
-        onError={() => setOk(false)}
-      />
-    </div>
+    <img
+      src={src}
+      alt=""
+      loading="lazy"
+      decoding="async"
+      className="absolute inset-0 w-full h-full object-cover"
+      onError={() => setOk(false)}
+    />
   )
 }
 
-/**
- * Payme videodagi pastki qoraygan panel:
- * blur + qorong‘i gradient, oq pill, ostida postlar pastga.
- */
+function luminance(hex) {
+  const h = String(hex || '').replace('#', '')
+  if (h.length < 6) return 0.55
+  const r = parseInt(h.slice(0, 2), 16) / 255
+  const g = parseInt(h.slice(2, 4), 16) / 255
+  const b = parseInt(h.slice(4, 6), 16) / 255
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b
+}
+
+function ReelCard({ post, dim, focused, cardRef, onCta }) {
+  const bg = post.backgroundColor || '#6EE000'
+  const label = post.ctaText || 'O‘qish'
+  const hasImage = Boolean(post.imageUrl)
+  const darkText = hasImage ? false : luminance(bg) > 0.45
+
+  return (
+    <article
+      ref={cardRef}
+      className="relative w-full overflow-hidden"
+      style={{
+        height: 'min(68vh, 500px)',
+        scrollSnapAlign: 'center',
+        scrollSnapStop: 'always',
+        borderRadius: '1.75rem',
+        background: bg,
+        transform: `scale(${focused ? 1 : 0.965})`,
+        transition: 'transform 0.28s cubic-bezier(0.22,1,0.36,1)',
+      }}
+    >
+      {hasImage ? (
+        <div className="absolute inset-0 pointer-events-none">
+          <PostMedia src={post.imageUrl} />
+          <div
+            className="absolute inset-0"
+            style={{
+              background: 'linear-gradient(180deg, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.12) 45%, rgba(0,0,0,0.55) 100%)',
+            }}
+          />
+        </div>
+      ) : null}
+
+      <div className="relative z-[1] flex flex-col h-full p-5 pb-20">
+        {post.badgeText ? (
+          <span
+            className={`self-start text-[10px] font-bold tracking-wider uppercase mb-2 ${
+              darkText ? 'text-black/40' : 'text-white/55'
+            }`}
+          >
+            {post.badgeText}
+          </span>
+        ) : null}
+        <h3
+          className={`font-black text-[1.55rem] leading-[1.12] tracking-tight max-w-[92%] ${
+            darkText ? 'text-[#0B1B3A]' : 'text-white'
+          }`}
+          style={hasImage ? { textShadow: '0 1px 12px rgba(0,0,0,0.45)' } : undefined}
+        >
+          {post.title}
+        </h3>
+        {post.body ? (
+          <p
+            className={`mt-2.5 text-[14px] leading-snug max-w-[90%] whitespace-pre-wrap line-clamp-5 ${
+              darkText ? 'text-[#0B1B3A]/70' : 'text-white/75'
+            }`}
+          >
+            {post.body}
+          </p>
+        ) : null}
+      </div>
+
+      <div
+        aria-hidden
+        className="absolute inset-0 z-[2] pointer-events-none rounded-[1.75rem]"
+        style={{
+          background: '#000',
+          opacity: dim,
+          transition: 'opacity 0.22s ease-out',
+        }}
+      />
+
+      <div className="absolute left-5 bottom-5 z-[5]">
+        <button
+          type="button"
+          onClick={(e) => onCta(e, post)}
+          className="inline-flex items-center justify-center h-11 px-6 rounded-full text-[14px] font-bold bg-[#0B1B3A] text-white shadow-lg active:scale-[0.97] transition"
+        >
+          {label}
+        </button>
+      </div>
+    </article>
+  )
+}
+
 export default function NewsSheet({ onStartCefr }) {
   const [posts, setPosts] = useState([])
   const [loading, setLoading] = useState(true)
-  const [expanded, setExpanded] = useState(false)
+  const [focusIdx, setFocusIdx] = useState(0)
+  const [dims, setDims] = useState([])
+  const sectionRef = useRef(null)
+  const cardRefs = useRef([])
 
-  useEffect(() => {
-    let alive = true
-    ;(async () => {
-      setLoading(true)
-      try {
-        const list = await getActivePosts()
-        if (!alive) return
-        setPosts(list.length ? list : fallbackPosts())
-      } catch {
-        if (!alive) return
+  const load = useCallback(async () => {
+    try {
+      const list = await getActivePosts()
+      if (list.length >= 5) {
+        setPosts(list)
+      } else if (list.length > 0) {
+        const pad = fallbackPosts().filter((f) => !list.some((p) => String(p.id) === String(f.id)))
+        setPosts([...list, ...pad].slice(0, 5))
+      } else {
         setPosts(fallbackPosts())
-      } finally {
-        if (alive) setLoading(false)
       }
-    })()
-    return () => { alive = false }
+    } catch {
+      setPosts(fallbackPosts())
+    } finally {
+      setLoading(false)
+    }
   }, [])
 
-  const featured = posts[0]
-  const rest = posts.slice(1)
+  useEffect(() => {
+    load()
+    const t = setInterval(load, 12000)
+    return () => clearInterval(t)
+  }, [load])
+
+  useEffect(() => {
+    cardRefs.current = cardRefs.current.slice(0, posts.length)
+  }, [posts.length])
+
+  useEffect(() => {
+    if (!posts.length) return undefined
+
+    const root = sectionRef.current?.closest('[data-home-scroll]') || null
+    if (root) {
+      root.style.scrollSnapType = 'y proximity'
+      root.style.scrollPaddingTop = '8vh'
+      root.style.scrollPaddingBottom = '8vh'
+    }
+
+    const update = () => {
+      const rootRect = root
+        ? root.getBoundingClientRect()
+        : { top: 0, height: window.innerHeight }
+      const focusY = rootRect.top + rootRect.height * 0.4
+      const span = Math.max(120, rootRect.height * 0.38)
+      let best = 0
+      let bestDist = Infinity
+      const next = posts.map((_, i) => {
+        const el = cardRefs.current[i]
+        if (!el) return i === 0 ? 0 : 0.55
+        const r = el.getBoundingClientRect()
+        const mid = r.top + r.height * 0.42
+        const dist = Math.abs(mid - focusY)
+        if (dist < bestDist) {
+          bestDist = dist
+          best = i
+        }
+        const t = Math.min(1, dist / span)
+        return Number((0.08 + t * t * 0.68).toFixed(3))
+      })
+      next[best] = 0
+      setFocusIdx(best)
+      setDims(next)
+    }
+
+    const target = root || window
+    target.addEventListener('scroll', update, { passive: true })
+    window.addEventListener('resize', update)
+    requestAnimationFrame(update)
+    const id = setInterval(update, 200)
+    return () => {
+      target.removeEventListener('scroll', update)
+      window.removeEventListener('resize', update)
+      clearInterval(id)
+      if (root) {
+        root.style.scrollSnapType = ''
+        root.style.scrollPaddingTop = ''
+        root.style.scrollPaddingBottom = ''
+      }
+    }
+  }, [posts])
 
   const onCta = (e, post) => {
     e?.stopPropagation?.()
@@ -60,131 +210,38 @@ export default function NewsSheet({ onStartCefr }) {
     }
     if (post?._startCefr || post?._local) {
       onStartCefr?.()
-      return
     }
-    setExpanded(true)
   }
 
-  const pillLabel = featured?.ctaText
-    || (featured?.url ? 'O‘qish' : null)
-    || (featured?._startCefr || featured?._local ? 'Imtihon topshirish' : null)
-    || 'Ko‘rish'
-
   return (
-    <div className="pointer-events-none absolute inset-x-0 bottom-0 z-30 flex flex-col justify-end">
-      {/* Yuqoridan pastga yumshoq qorayish */}
-      <div
-        className="h-24 w-full shrink-0"
-        style={{
-          background: 'linear-gradient(180deg, rgba(8,10,14,0) 0%, rgba(8,10,14,0.55) 45%, rgba(8,10,14,0.92) 100%)',
-        }}
-      />
-
-      <div
-        className="pointer-events-auto w-full overflow-hidden"
-        style={{
-          borderRadius: '1.75rem 1.75rem 0 0',
-          background: 'rgba(18, 14, 28, 0.78)',
-          backdropFilter: 'blur(28px) saturate(1.2)',
-          WebkitBackdropFilter: 'blur(28px) saturate(1.2)',
-          borderTop: '1px solid rgba(255,255,255,0.08)',
-          boxShadow: '0 -20px 50px rgba(0,0,0,0.55)',
-          maxHeight: expanded ? '78vh' : '42vh',
-          transition: 'max-height 0.38s cubic-bezier(0.22, 1, 0.36, 1)',
-        }}
-      >
-        <div className="px-4 pt-3 pb-2">
-          <button
-            type="button"
-            aria-label={expanded ? 'Yopish' : 'Ochish'}
-            onClick={() => setExpanded((v) => !v)}
-            className="mx-auto block h-1 w-10 rounded-full bg-white/25 mb-3"
-          />
-
-          {/* Payme: oq pill */}
-          {!loading && featured ? (
-            <button
-              type="button"
-              onClick={(e) => onCta(e, featured)}
-              className="w-full h-[52px] rounded-full bg-[#f3f3f5] text-black text-[15px] font-bold flex items-center justify-center gap-2.5 active:scale-[0.985] transition shadow-[0_10px_30px_rgba(0,0,0,0.35)]"
-            >
-              <CreditCard size={18} strokeWidth={2.2} />
-              {pillLabel}
-            </button>
-          ) : null}
-        </div>
-
-        <div
-          className="px-4 pb-7 overflow-y-auto overscroll-contain"
-          style={{ maxHeight: expanded ? 'calc(78vh - 5.5rem)' : 'calc(42vh - 5.5rem)' }}
-        >
-          {loading ? (
-            <div className="flex justify-center py-8 text-white/35">
-              <Loader2 className="animate-spin" size={22} />
-            </div>
-          ) : (
-            <>
-              {featured ? (
-                <button
-                  type="button"
-                  onClick={() => setExpanded(true)}
-                  className="w-full text-left mt-3 mb-4"
-                >
-                  <p className="font-black text-[1.35rem] leading-snug text-white tracking-tight">
-                    {featured.title}
-                  </p>
-                  {featured.body ? (
-                    <p className="mt-1.5 text-[13px] text-white/45 leading-relaxed line-clamp-2">
-                      {featured.body}
-                    </p>
-                  ) : null}
-                  {expanded ? <PostMedia src={featured.imageUrl} /> : null}
-                </button>
-              ) : null}
-
-              {expanded && rest.map((post) => (
-                <article
-                  key={post.id}
-                  className="mb-3 rounded-[1.35rem] bg-white/[0.06] border border-white/[0.07] overflow-hidden"
-                >
-                  <div className="px-4 pt-4 pb-2">
-                    <h3 className="font-black text-[1.05rem] text-white leading-snug">{post.title}</h3>
-                    {post.body ? (
-                      <p className="mt-1 text-[12px] text-white/40 line-clamp-2">{post.body}</p>
-                    ) : null}
-                  </div>
-                  {post.imageUrl ? (
-                    <div className="px-3 pb-2">
-                      <PostMedia src={post.imageUrl} />
-                    </div>
-                  ) : null}
-                  {(post.url || post.ctaText || post._local) ? (
-                    <div className="px-4 pb-4">
-                      <button
-                        type="button"
-                        onClick={(e) => onCta(e, post)}
-                        className="h-9 px-4 rounded-full bg-white text-black text-[12px] font-bold"
-                      >
-                        {post.ctaText || (post.url ? 'O‘qish' : 'Boshlash')}
-                      </button>
-                    </div>
-                  ) : null}
-                </article>
-              ))}
-
-              {!expanded && posts.length > 1 ? (
-                <button
-                  type="button"
-                  onClick={() => setExpanded(true)}
-                  className="w-full text-center text-[12px] font-semibold text-white/40 py-1"
-                >
-                  Yana {posts.length - 1} ta post · pastga
-                </button>
-              ) : null}
-            </>
-          )}
-        </div>
+    <section ref={sectionRef} className="-mx-0.5 mt-6 pb-24">
+      <div className="flex items-center justify-between mb-3 px-1">
+        <p className="text-[11px] font-bold tracking-[0.14em] uppercase text-white/40">
+          Yangiliklar · {posts.length} ta
+        </p>
+        <p className="text-[11px] text-white/30 tabular-nums">
+          {focusIdx + 1}/{Math.max(1, posts.length)}
+        </p>
       </div>
-    </div>
+
+      {loading ? (
+        <div className="flex justify-center py-14 text-white/35">
+          <Loader2 className="animate-spin" size={24} />
+        </div>
+      ) : (
+        <div className="flex flex-col gap-4">
+          {posts.map((post, i) => (
+            <ReelCard
+              key={post.id}
+              post={post}
+              dim={dims[i] ?? (i === 0 ? 0 : 0.5)}
+              focused={i === focusIdx}
+              cardRef={(el) => { cardRefs.current[i] = el }}
+              onCta={onCta}
+            />
+          ))}
+        </div>
+      )}
+    </section>
   )
 }

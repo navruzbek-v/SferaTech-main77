@@ -16,6 +16,7 @@ import { countWords } from '../api/exam.js'
 import { hasAuthToken } from '../api/client.js'
 import { ensureSession } from '../api/student.js'
 import CefrExam from './CefrExam.jsx'
+import AttanalExam from './AttanalExam.jsx'
 import ExamPartView from '../components/exam/ExamPartView.jsx'
 import PartShell from '../components/exam/PartShell.jsx'
 import SpeakingProsCons from '../components/exam/SpeakingProsCons.jsx'
@@ -30,12 +31,13 @@ const STAGES = [
   { key: 'submit', label: 'Yakun', icon: CheckCircle2 },
 ]
 
-/** CEFR: token bor → API; yo‘q → to‘g‘ridan lokal (401 chiqmasin). */
+/** CEFR / at-Tanal: token bor → API; yo‘q → lokal */
 export default function ExamSimulator({ type, onExit }) {
-  const [phase, setPhase] = useState(type === 'CEFR' ? 'check' : 'local') // check | api | local
+  const isApiExam = type === 'CEFR' || type === 'at-Tanal'
+  const [phase, setPhase] = useState(isApiExam ? 'check' : 'local') // check | api | local
 
   useEffect(() => {
-    if (type !== 'CEFR') return undefined
+    if (!isApiExam) return undefined
     let alive = true
     ;(async () => {
       if (!hasAuthToken()) await ensureSession()
@@ -43,9 +45,9 @@ export default function ExamSimulator({ type, onExit }) {
       setPhase(hasAuthToken() ? 'api' : 'local')
     })()
     return () => { alive = false }
-  }, [type])
+  }, [type, isApiExam])
 
-  if (type === 'CEFR' && phase === 'check') {
+  if (isApiExam && phase === 'check') {
     return (
       <div className="h-full bg-base flex items-center justify-center">
         <Loader2 className="animate-spin text-neon" size={36} />
@@ -56,6 +58,13 @@ export default function ExamSimulator({ type, onExit }) {
     return (
       <div className="h-full min-h-0">
         <CefrExam onExit={onExit} onFallback={() => setPhase('local')} />
+      </div>
+    )
+  }
+  if (type === 'at-Tanal' && phase === 'api') {
+    return (
+      <div className="h-full min-h-0">
+        <AttanalExam onExit={onExit} onFallback={() => setPhase('local')} />
       </div>
     )
   }

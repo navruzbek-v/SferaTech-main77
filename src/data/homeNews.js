@@ -10,6 +10,6 @@ export const HOME_NEWS = [
     cta: 'Imtihon topshirish',
     // Lokal CEFR hero — dark + neon
     image: '/images/cefr-exam-hero.svg?v=4',
-    accent: '#3DDC97',
+    accent: '#6EE000',
   },
 ]

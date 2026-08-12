@@ -16,6 +16,12 @@ export default defineConfig({
         secure: true,
         rewrite: (path) => path.replace(/^\/api/, ''),
       },
+      // Post / kontent rasmlari
+      '/images': {
+        target: 'https://arabosfera.onrender.com',
+        changeOrigin: true,
+        secure: true,
+      },
     },
   },
   preview: {
