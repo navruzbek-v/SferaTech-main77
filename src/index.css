@@ -2,7 +2,18 @@
 @tailwind components;
 @tailwind utilities;
 
-:root { color-scheme: dark; }
+:root {
+  color-scheme: dark;
+  --app-safe-top: env(safe-area-inset-top, 0px);
+  --app-safe-bottom: env(safe-area-inset-bottom, 0px);
+  --app-safe-left: 0px;
+  --app-safe-right: 0px;
+}
+
+/* Telegram Mini App — Close/… ostida kontent */
+html.in-telegram {
+  --app-safe-top: max(124px, env(safe-area-inset-top, 0px));
+}
 
 html, body, #root {
   height: 100%;

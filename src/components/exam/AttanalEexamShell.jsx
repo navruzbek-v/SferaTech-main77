@@ -77,7 +77,7 @@ function EexamHeader({
       style={{
         background: EE.white,
         borderColor: EE.line,
-        paddingTop: 'max(0.2rem, env(safe-area-inset-top))',
+        paddingTop: '0.2rem',
       }}
     >
       <div className="px-1.5 py-1.5 flex items-center gap-1">
@@ -144,7 +144,7 @@ function EexamFooter({ showNext, nextDisabled, onNext, nextLabel }) {
       style={{
         background: EE.white,
         borderColor: EE.line,
-        paddingBottom: 'max(0.35rem, env(safe-area-inset-bottom))',
+        paddingBottom: '0.35rem',
       }}
     >
       <div className="px-2 py-1.5 flex items-center justify-between gap-1.5">

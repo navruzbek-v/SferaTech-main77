@@ -13,32 +13,16 @@ export function cleanPostText(value) {
 export function getMediaBase() {
   const fromEnv = (import.meta.env.VITE_MEDIA_BASE_URL || '').replace(/\/$/, '')
   if (fromEnv) return fromEnv
-  // Dev / Vercel: same-origin proxy (`/images` → backend)
-  const api = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/$/, '')
-  if (!api || api === '/api' || api.startsWith('/')) return ''
   return BACKEND_ORIGIN
 }
 
-/** Relative path → ochiladigan URL (bo‘shliq / kirill / emoji encode) */
 export function resolveMediaUrl(path) {
   if (!path) return null
-  let p = String(path).trim()
+  const p = String(path).trim()
   if (!p) return null
   if (/^https?:\/\//i.test(p) || p.startsWith('data:') || p.startsWith('blob:')) return p
-  // Ba’zan API to‘liq URL ni relative sifatida qaytaradi
-  p = p.replace(/\\/g, '/')
-  p = p.replace(/^\.\//, '').replace(/^\/+/, '')
-  // Allaqachon encode qilingan bo‘lsa — ikki marta encode qilmaslik
-  const encoded = p.split('/').map((seg) => {
-    try {
-      const decoded = decodeURIComponent(seg)
-      return encodeURIComponent(decoded)
-    } catch {
-      return encodeURIComponent(seg)
-    }
-  }).join('/')
-  const base = getMediaBase()
-  return base ? `${base}/${encoded}` : `/${encoded}`
+  const rel = p.replace(/^\.\//, '').replace(/^\//, '')
+  return `${getMediaBase()}/${rel}`
 }
 
 function pick(obj, ...keys) {
@@ -62,9 +46,7 @@ export function mapPost(raw, index = 0) {
   const id = pick(raw, 'id', 'Id')
   const title = cleanPostText(pick(raw, 'title', 'Title'))
   const body = cleanPostText(pick(raw, 'body', 'Body'))
-  // imagePath ni cleanPostText bilan buzmaslik (bo‘shliq/kirill kerak)
-  const imageRaw = pick(raw, 'imagePath', 'ImagePath', 'image', 'Image', 'imageUrl', 'ImageUrl')
-  const imagePath = imageRaw != null ? String(imageRaw).trim() || null : null
+  const imagePath = cleanPostText(pick(raw, 'imagePath', 'ImagePath', 'image', 'Image')) || null
   const ctaText = cleanPostText(pick(raw, 'ctaText', 'CtaText', 'cta', 'Cta')) || null
   const badgeText = cleanPostText(pick(raw, 'badgeText', 'BadgeText', 'tag', 'Tag')) || null
   const bg = cleanPostText(pick(raw, 'backgroundColor', 'BackgroundColor')) || null
@@ -82,18 +64,13 @@ export function mapPost(raw, index = 0) {
   const sortOrder = Number(pick(raw, 'sortOrder', 'SortOrder') ?? 0)
   if (!title && !body && !imagePath && !url) return null
 
-  // Agar imagePath allaqachon http bo‘lsa — to‘g‘ridan
-  const imageUrl = /^https?:\/\//i.test(imagePath || '')
-    ? imagePath
-    : resolveMediaUrl(imagePath)
-
   return {
     id: id ?? `post-${sortOrder}-${title || 'n'}`,
     title: title || (url ? 'Havola' : 'Yangilik'),
     body,
     badgeText,
     imagePath,
-    imageUrl,
+    imageUrl: resolveMediaUrl(imagePath),
     ctaText: ctaText || (url ? 'O‘qish' : 'O‘qish'),
     url,
     backgroundColor: bg || CARD_COLORS[Math.abs(Number(id) || index) % CARD_COLORS.length],
@@ -168,7 +145,7 @@ export function fallbackPosts() {
       body: 'Barcha skillardan imtihon topshiring: o‘qish, tinglash, yozuv va gapirish.',
       image: '/images/cefr-exam-hero.svg?v=4',
       cta: 'Imtihon topshirish',
-      accent: '#6EE000',
+      accent: '#3DDC97',
       _startCefr: true,
     },
     {
@@ -177,7 +154,7 @@ export function fallbackPosts() {
       body: 'Admin paneldan 3–4 ta post qo‘shing — ular shu feedda pastga chiqadi.',
       image: null,
       cta: 'O‘qish',
-      accent: '#3BBFF5',
+      accent: '#E8A0BF',
     },
     {
       id: 'f3',
@@ -185,7 +162,7 @@ export function fallbackPosts() {
       body: 'Har bir skill alohida mashq va mock imtihon bilan.',
       image: null,
       cta: 'O‘qish',
-      accent: '#8B95A8',
+      accent: '#F0A35E',
     },
     {
       id: 'f4',
@@ -193,15 +170,7 @@ export function fallbackPosts() {
       body: 'Do‘stingiz bilan o‘ynab o‘rganing.',
       image: null,
       cta: 'O‘qish',
-      accent: '#F5C842',
-    },
-    {
-      id: 'f5',
-      title: 'Kalendar va mashg‘ulotlar',
-      body: 'Haftalik reja va darslar — bir joyda.',
-      image: null,
-      cta: 'O‘qish',
-      accent: '#A78BFA',
+      accent: '#5B8DEF',
     },
   ]
 

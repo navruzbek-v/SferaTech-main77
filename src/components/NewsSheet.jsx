@@ -214,7 +214,7 @@ export default function NewsSheet({ onStartCefr }) {
   }
 
   return (
-    <section ref={sectionRef} className="-mx-0.5 mt-6 pb-24">
+    <section ref={sectionRef} data-news-sheet className="-mx-0.5 mt-5 pb-24">
       <div className="flex items-center justify-between mb-3 px-1">
         <p className="text-[11px] font-bold tracking-[0.14em] uppercase text-white/40">
           Yangiliklar · {posts.length} ta

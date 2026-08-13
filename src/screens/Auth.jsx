@@ -70,7 +70,9 @@ export default function Auth() {
   }
 
   return (
-    <div className="h-[100dvh] overflow-hidden bg-base flex flex-col items-center justify-center px-6">
+    <div
+      className="h-full overflow-hidden bg-base flex flex-col items-center justify-center px-6"
+    >
       <div className="flex flex-col items-center mb-14 select-none">
         <div className="w-20 h-20 rounded-3xl bg-neon/10 border border-neon/30 flex items-center justify-center mb-5">
           <span className="arabic text-4xl text-neon">ع</span>

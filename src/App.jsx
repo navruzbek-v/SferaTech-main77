@@ -120,7 +120,9 @@ export default function App() {
     <AppCtx.Provider value={ctx}>
       <Toast toast={toast} />
       {!authed ? (
-        <Auth />
+        <PhoneFrame>
+          <Auth />
+        </PhoneFrame>
       ) : (
         <PhoneFrame>
           <Dashboard />
@@ -135,6 +137,12 @@ function PhoneFrame({ children }) {
     <div className="h-[100dvh] w-full overflow-hidden flex items-center justify-center bg-gradient-to-b from-[#05070a] to-[#0b0f16] sm:p-6">
       <div
         className="w-full h-full sm:w-[420px] sm:max-w-[420px] sm:h-[min(860px,100%)] bg-[#0B1210] sm:rounded-[2.5rem] sm:border sm:border-line sm:shadow-2xl overflow-hidden relative flex flex-col"
+        style={{
+          paddingTop: 'var(--app-safe-top)',
+          paddingBottom: 'var(--app-safe-bottom)',
+          paddingLeft: 'var(--app-safe-left)',
+          paddingRight: 'var(--app-safe-right)',
+        }}
       >
         <div className="flex-1 min-h-0 overflow-hidden relative">
           {children}

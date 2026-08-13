@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import {
   ListChecks, HeartCrack, Play, Swords, Settings, Trophy,
-  Pencil, Zap, CalendarDays, Sparkles,
+  Pencil, Zap, CalendarDays, BadgeCheck,
 } from 'lucide-react'
 import { useApp } from '../App.jsx'
 import { Modal } from '../ui.jsx'
@@ -14,29 +14,32 @@ import QuizRunner from './QuizRunner.jsx'
 import Section from './Section.jsx'
 import NewsSheet from '../components/NewsSheet.jsx'
 
-/** Jonli palitra — lime / sky / slate, bir-biriga mos */
+/** Uyg‘un palitra — mint / teal / mist (reference layout, yumshoqroq ranglar) */
 const C = {
-  bg: '#12151c',
-  tile: '#1e2430',
-  tileDeep: '#171b24',
-  lime: '#6EE000',
-  limeDeep: '#4FAD00',
-  sky: '#3BBFF5',
-  skyDeep: '#1E9FD4',
-  slate: '#8B95A8',
-  slateDeep: '#6B7588',
+  bg: '#10161C',
+  tile: '#1B232C',
+  tileDeep: '#12181F',
+  mint: '#3AD68A',
+  mintDeep: '#26B06C',
+  mintInk: '#08301C',
+  teal: '#3EB6D9',
+  tealDeep: '#1A4A5C',
+  mist: '#8A97A8',
+  mistDeep: '#6B7888',
+  ink: '#F4F7FA',
 }
 
-function Tile3D({ bg, deep, className = '', children, onClick, type = 'button' }) {
+function Press({ bg, deep, className = '', style, children, onClick }) {
   return (
     <button
-      type={type}
+      type="button"
       onClick={onClick}
       className={`relative text-left active:translate-y-[2px] active:shadow-none transition ${className}`}
       style={{
         background: bg,
         boxShadow: `0 5px 0 ${deep}`,
-        borderRadius: '1.35rem',
+        borderRadius: '1.4rem',
+        ...style,
       }}
     >
       {children}
@@ -57,6 +60,7 @@ export default function Dashboard() {
   const initial = (name[0] || 'M').toUpperCase()
   const remaining = Math.max(0, 1200 - (app.stats.correct + app.stats.wrong))
   const days = app.daysLeft
+  const errors = app.errorCount || app.stats.wrong || 0
 
   if (screen === 'battle') return <Battle onExit={() => setScreen('home')} />
   if (screen === 'quiz') return <QuizRunner onExit={() => setScreen('home')} />
@@ -65,158 +69,207 @@ export default function Dashboard() {
 
   return (
     <div className="relative h-full overflow-hidden" style={{ background: C.bg }}>
-      <div className="relative h-full overflow-y-auto px-3.5 pt-4 pb-8" data-home-scroll>
-        {/* Bosh blok — snap nuqtasi (postlarga sakrab ketmasin) */}
+      <div
+        className="relative h-full overflow-y-auto px-3.5 pb-8"
+        data-home-scroll
+        style={{ paddingTop: '0.65rem' }}
+      >
         <div style={{ scrollSnapAlign: 'start', scrollSnapStop: 'normal' }}>
-        {/* Header */}
-        <div className="flex items-center justify-between mb-3.5">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div
-              className="w-11 h-11 rounded-full flex items-center justify-center text-base font-black shrink-0 text-[#0B1B3A]"
-              style={{ background: C.lime }}
-            >
-              {initial}
+          {/* Header */}
+          <div className="flex items-center justify-between mb-3.5">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="relative shrink-0">
+                <div
+                  className="w-12 h-12 rounded-full flex items-center justify-center text-[17px] font-black"
+                  style={{ background: C.mint, color: C.mintInk }}
+                >
+                  {initial}
+                </div>
+                <span
+                  className="absolute bottom-0 right-0 w-3 h-3 rounded-full border-2"
+                  style={{ background: C.mint, borderColor: C.bg }}
+                />
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <h1 className="font-extrabold text-[15px] text-white truncate">{name}</h1>
+                  <BadgeCheck size={16} className="shrink-0" style={{ color: C.teal }} />
+                  <span
+                    className="shrink-0 px-1.5 py-[1px] rounded-md text-[10px] font-black text-white"
+                    style={{ background: C.teal }}
+                  >
+                    {level}
+                  </span>
+                </div>
+              </div>
             </div>
-            <div className="min-w-0">
-              <h1 className="font-extrabold text-[15px] text-white truncate">{name}</h1>
-              <p className="text-[11px] font-bold tracking-wide" style={{ color: C.lime }}>
-                {level} · O‘QUVCHI
-              </p>
+            <div className="flex items-center gap-0.5 shrink-0">
+              <button type="button" className="p-2 rounded-xl text-amber-300" aria-label="Reyting">
+                <Trophy size={22} />
+              </button>
+              <button
+                type="button"
+                onClick={() => { app.signOut?.() || app.setAuthed(false) }}
+                className="p-2 rounded-xl text-white/40"
+                aria-label="Sozlamalar"
+              >
+                <Settings size={22} />
+              </button>
             </div>
           </div>
-          <div className="flex items-center gap-0.5">
-            <button type="button" className="p-2.5 rounded-xl text-amber-300 hover:bg-white/5" aria-label="Reyting">
-              <Trophy size={22} />
-            </button>
-            <button
-              type="button"
-              onClick={() => { app.signOut?.() || app.setAuthed(false) }}
-              className="p-2.5 rounded-xl text-white/45 hover:bg-white/5"
-              aria-label="Sozlamalar"
-            >
-              <Settings size={22} />
-            </button>
-          </div>
-        </div>
 
-        {/* Progress */}
-        <button
-          type="button"
-          onClick={() => setCalOpen(true)}
-          className="w-full text-left rounded-[1.35rem] p-4 mb-3"
-          style={{ background: C.tile }}
-        >
-          <div className="flex items-center justify-between text-sm mb-2">
-            <span className="flex items-center gap-1.5 text-white/90 font-semibold">
-              <Pencil size={14} className="text-white/40" />
-              {days == null ? 'Sana tanlang' : `${days} kun qoldi`}
-            </span>
-            <span className="flex items-center gap-1 text-white/40 text-xs font-bold">
-              <Zap size={13} style={{ color: C.lime }} />
-              {days == null ? '—' : `${days} kun`}
-            </span>
-          </div>
-          <div className="flex items-end gap-3">
-            <span className="text-4xl font-black tabular-nums leading-none text-white">{app.progressPct}%</span>
-            <div className="flex items-center gap-3 pb-1 text-sm font-bold">
-              <span style={{ color: C.lime }}>✓ {app.stats.correct}</span>
-              <span className="text-rose-400">× {app.stats.wrong}</span>
-              <span className="text-white/30">— {remaining}</span>
-            </div>
-          </div>
-          <div className="mt-3 h-2 rounded-full overflow-hidden" style={{ background: '#0d1016' }}>
-            <div
-              className="h-full rounded-full transition-all"
-              style={{ width: `${Math.min(100, app.progressPct)}%`, background: C.lime }}
-            />
-          </div>
-        </button>
-
-        {/* 2 kichik tile */}
-        <div className="grid grid-cols-2 gap-2.5 mb-2.5">
-          <Tile3D
-            bg={C.tile}
-            deep={C.tileDeep}
-            onClick={() => setSection('all')}
-            className="p-3.5"
+          {/* Progress */}
+          <button
+            type="button"
+            onClick={() => setCalOpen(true)}
+            className="w-full text-left rounded-[1.4rem] p-4 mb-2.5"
+            style={{ background: C.tile }}
           >
-            <span
-              className="inline-flex w-9 h-9 rounded-full items-center justify-center mb-2"
-              style={{ background: `${C.sky}33` }}
-            >
-              <ListChecks size={18} style={{ color: C.sky }} />
-            </span>
-            <p className="font-bold text-[13px] text-white leading-snug">Barcha testlar</p>
-          </Tile3D>
-          <Tile3D
-            bg={C.tile}
-            deep={C.tileDeep}
-            onClick={() => setSection('errors')}
-            className="p-3.5 relative"
-          >
-            {app.errorCount > 0 && (
-              <span className="absolute top-2.5 right-2.5 min-w-[20px] h-[20px] px-1 rounded-full bg-rose-500 text-white text-[10px] font-black flex items-center justify-center">
-                {app.errorCount}
+            <div className="flex items-center justify-between text-sm mb-2">
+              <span className="flex items-center gap-1.5 text-white/90 font-semibold">
+                <Pencil size={14} className="text-white/35" />
+                {days == null ? 'Sana tanlang' : `${days} kun qoldi`}
               </span>
-            )}
-            <span className="inline-flex w-9 h-9 rounded-full items-center justify-center mb-2 bg-rose-500/20">
-              <HeartCrack size={18} className="text-rose-400" />
-            </span>
-            <p className="font-bold text-[13px] text-white leading-snug">Xatolarni tuzatish</p>
-          </Tile3D>
-        </div>
+              <span className="flex items-center gap-1 text-white/40 text-xs font-bold">
+                <Zap size={13} className="text-amber-300" />
+                {days == null ? '0 kun' : `${days} kun`}
+              </span>
+            </div>
+            <div className="flex items-end justify-between gap-3">
+              <span className="text-[2.35rem] font-black tabular-nums leading-none text-white">
+                {app.progressPct}%
+              </span>
+              <div className="flex items-center gap-3 pb-1 text-[13px] font-bold">
+                <span style={{ color: C.mint }}>✓ {app.stats.correct}</span>
+                <span className="text-rose-400">× {app.stats.wrong}</span>
+                <span className="text-white/30">— {remaining}</span>
+              </div>
+            </div>
+            <div className="mt-3 h-[7px] rounded-full overflow-hidden" style={{ background: '#0C1116' }}>
+              <div
+                className="h-full rounded-full transition-all"
+                style={{ width: `${Math.min(100, app.progressPct)}%`, background: C.mint }}
+              />
+            </div>
+          </button>
 
-        {/* Premium — sky */}
-        <Tile3D
-          bg={C.sky}
-          deep={C.skyDeep}
-          onClick={() => app.notify?.('Premium tez orada', 'info')}
-          className="w-full px-4 py-4 mb-2.5 flex items-center justify-between"
-        >
-          <div>
-            <p className="text-xl font-black text-white leading-tight">Premium oling</p>
-            <p className="text-[11px] text-white/80 mt-0.5 font-medium">
-              vaqti-vaqti bilan almashib turuvchi blok
-            </p>
+          {/* Chap: 2 kichik · O‘ng: Premium (baland) */}
+          <div className="grid grid-cols-2 gap-2.5 mb-2.5 items-stretch">
+            <div className="flex flex-col gap-2.5 min-h-0">
+              <Press
+                bg={C.tile}
+                deep={C.tileDeep}
+                onClick={() => setSection('all')}
+                className="flex-1 px-3.5 py-3.5 flex items-center gap-3"
+              >
+                <ListChecks size={22} className="text-white/80 shrink-0" />
+                <p className="font-bold text-[13.5px] text-white leading-snug">Barcha testlar</p>
+              </Press>
+              <Press
+                bg={C.tile}
+                deep={C.tileDeep}
+                onClick={() => setSection('errors')}
+                className="flex-1 px-3.5 py-3.5 flex items-center gap-3"
+              >
+                {errors > 0 && (
+                  <span className="absolute -top-1 -right-1 min-w-[22px] h-[22px] px-1 rounded-full bg-rose-500 text-white text-[11px] font-black flex items-center justify-center shadow">
+                    {errors}
+                  </span>
+                )}
+                <HeartCrack size={22} className="text-rose-400 shrink-0" />
+                <p className="font-bold text-[13.5px] text-white leading-snug">Xatolarni tuzatish</p>
+              </Press>
+            </div>
+
+            <Press
+              bg={C.tile}
+              deep={C.tileDeep}
+              onClick={() => app.notify?.('Premium tez orada', 'info')}
+              className="h-full min-h-[118px] p-4 flex flex-col justify-end overflow-hidden"
+              style={{
+                background: `linear-gradient(160deg, #243542 0%, ${C.tile} 55%, #152028 100%)`,
+              }}
+            >
+              <div
+                aria-hidden
+                className="absolute -right-6 -top-8 w-28 h-28 rounded-full opacity-40 pointer-events-none"
+                style={{ background: 'radial-gradient(circle, #3EB6D9 0%, transparent 70%)' }}
+              />
+              <div
+                aria-hidden
+                className="absolute right-2 top-6 w-20 h-20 rounded-full opacity-25 pointer-events-none"
+                style={{ background: 'radial-gradient(circle, #3AD68A 0%, transparent 70%)' }}
+              />
+              <p className="relative font-black text-[1.35rem] text-white leading-tight">Premium oling</p>
+              <p className="relative text-[11px] mt-1 font-medium leading-snug" style={{ color: C.teal }}>
+                vaqti-vaqti bilan almashib turuvchi blok
+              </p>
+            </Press>
           </div>
-          <span className="w-10 h-10 rounded-full bg-white/25 flex items-center justify-center shrink-0">
-            <Sparkles size={20} className="text-white" />
-          </span>
-        </Tile3D>
 
-        {/* Imtihon + Oktagon */}
-        <div className="grid grid-cols-2 gap-2.5 mb-2.5">
-          <Tile3D
-            bg={C.lime}
-            deep={C.limeDeep}
+          {/* Imtihon — to‘liq kenglik */}
+          <Press
+            bg={C.mint}
+            deep={C.mintDeep}
             onClick={() => setExamPick(true)}
-            className="min-h-[118px] p-4 flex flex-col justify-between"
+            className="w-full mb-2.5 px-5 py-4 flex items-center justify-between"
           >
-            <span className="w-10 h-10 rounded-full bg-black/15 flex items-center justify-center">
-              <Play size={20} fill="#0B1B3A" className="text-[#0B1B3A]" />
-            </span>
             <div>
-              <p className="font-black text-[16px] text-[#0B1B3A] leading-tight">Imtihon</p>
-              <p className="text-[10px] font-bold text-[#0B1B3A]/55 uppercase tracking-wide mt-0.5">
-                CEFR · AT-TANAL
+              <p className="font-black text-[1.35rem] leading-none" style={{ color: C.mintInk }}>
+                Imtihon topshirish
+              </p>
+              <p className="text-[11px] font-bold mt-1 tracking-wide" style={{ color: `${C.mintInk}99` }}>
+                CEFR • AT-TANAL
               </p>
             </div>
-          </Tile3D>
-          <Tile3D
-            bg={C.slate}
-            deep={C.slateDeep}
-            onClick={() => setScreen('battle')}
-            className="min-h-[118px] p-4 flex flex-col justify-between"
-          >
-            <span className="w-10 h-10 rounded-full bg-black/15 flex items-center justify-center">
-              <Swords size={20} className="text-white" />
+            <span
+              className="w-12 h-12 rounded-full bg-white flex items-center justify-center shrink-0"
+              style={{ boxShadow: '0 3px 0 rgba(0,0,0,0.12)' }}
+            >
+              <Play size={22} fill={C.mint} style={{ color: C.mint, marginLeft: 2 }} />
             </span>
+          </Press>
+
+          {/* Oktagon — to‘liq kenglik */}
+          <Press
+            bg={C.mist}
+            deep={C.mistDeep}
+            onClick={() => setScreen('battle')}
+            className="w-full mb-2.5 px-5 py-4 flex items-center justify-between"
+          >
             <div>
-              <p className="font-black text-[16px] text-white leading-tight">Oktagon</p>
-              <p className="text-[10px] font-bold text-white/70 mt-0.5">Birga-bir jang</p>
+              <p className="font-black text-[1.35rem] text-white leading-none">Oktagon</p>
+              <p className="text-[11px] font-semibold text-white/75 mt-1">
+                Birga-bir jang. O&apos;ynab o&apos;rganing
+              </p>
             </div>
-          </Tile3D>
-        </div>
+            <span
+              className="w-12 h-12 rounded-full bg-white flex items-center justify-center shrink-0"
+              style={{ boxShadow: '0 3px 0 rgba(0,0,0,0.12)' }}
+            >
+              <Swords size={22} style={{ color: C.mistDeep }} />
+            </span>
+          </Press>
+
+          {/* Yangiliklar teaser */}
+          <Press
+            bg="#4BA3D6"
+            deep="#2E7FB0"
+            onClick={() => {
+              const el = document.querySelector('[data-home-scroll]')
+              const news = document.querySelector('[data-news-sheet]')
+              news?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+              if (!news) el?.scrollBy({ top: 280, behavior: 'smooth' })
+            }}
+            className="w-full mb-1 px-5 py-6"
+          >
+            <p className="font-black text-[1.45rem] leading-tight text-[#0B1B3A]">
+              yangiliklar va lifehacklar
+            </p>
+            <p className="text-[12px] font-semibold text-[#0B1B3A]/55 mt-1">
+              o&apos;qish uchun pastga torting
+            </p>
+          </Press>
         </div>
 
         <NewsSheet onStartCefr={() => setExam('CEFR')} />
