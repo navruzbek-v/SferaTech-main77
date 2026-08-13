@@ -4,15 +4,10 @@
 
 :root {
   color-scheme: dark;
-  --app-safe-top: env(safe-area-inset-top, 0px);
+  --app-safe-top: 0px;
   --app-safe-bottom: env(safe-area-inset-bottom, 0px);
   --app-safe-left: 0px;
   --app-safe-right: 0px;
-}
-
-/* Telegram Mini App — Close/… ostida kontent */
-html.in-telegram {
-  --app-safe-top: max(124px, env(safe-area-inset-top, 0px));
 }
 
 html, body, #root {
@@ -22,11 +17,25 @@ html, body, #root {
 }
 body {
   margin: 0;
-  background: #05070a;
+  background: #070b10;
   color: #ffffff;
   font-family: 'Inter', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   overscroll-behavior: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.home-scroll {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+  overscroll-behavior-y: contain;
+}
+
+.glass {
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
 }
 
 /* Custom scrollbar */

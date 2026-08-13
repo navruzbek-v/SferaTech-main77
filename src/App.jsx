@@ -134,9 +134,9 @@ export default function App() {
 
 function PhoneFrame({ children }) {
   return (
-    <div className="h-[100dvh] w-full overflow-hidden flex items-center justify-center bg-gradient-to-b from-[#05070a] to-[#0b0f16] sm:p-6">
+    <div className="h-[100dvh] w-full overflow-hidden flex items-center justify-center bg-[#070b10] sm:p-6">
       <div
-        className="w-full h-full sm:w-[420px] sm:max-w-[420px] sm:h-[min(860px,100%)] bg-[#0B1210] sm:rounded-[2.5rem] sm:border sm:border-line sm:shadow-2xl overflow-hidden relative flex flex-col"
+        className="w-full h-full sm:w-[420px] sm:max-w-[420px] sm:h-[min(860px,100%)] sm:rounded-[2.5rem] sm:border sm:border-white/10 sm:shadow-2xl overflow-hidden relative flex flex-col"
         style={{
           paddingTop: 'var(--app-safe-top)',
           paddingBottom: 'var(--app-safe-bottom)',

@@ -33,12 +33,10 @@ export function applySafeArea(tg = getTelegram()) {
   const inTg = isTelegramWebView(tg)
   root.classList.toggle('in-telegram', inTg)
 
-  // «Закрыть» pill ~48px + Telegram chrome — inset 0 bo‘lsa ham joy
-  const minTop = inTg ? 124 : 0
-  const minBottom = inTg ? 12 : 0
-
-  root.style.setProperty('--app-safe-top', `${Math.max(top, minTop)}px`)
-  root.style.setProperty('--app-safe-bottom', `${Math.max(bottom, minBottom)}px`)
+  // Telegram o‘z headerida «Закрыть» turadi — qo‘shimcha 100px joy ochilmasin.
+  // Faqat haqiqiy inset (fullscreen overlay bo‘lsa contentSafeAreaInset).
+  root.style.setProperty('--app-safe-top', `${top}px`)
+  root.style.setProperty('--app-safe-bottom', `${inTg ? Math.max(bottom, 8) : bottom}px`)
   root.style.setProperty('--app-safe-left', `${left}px`)
   root.style.setProperty('--app-safe-right', `${right}px`)
 }
