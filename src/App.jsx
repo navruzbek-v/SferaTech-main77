@@ -27,7 +27,7 @@ export default function App() {
 
   useEffect(() => {
     initTelegram()
-    // Mini-app: /admin yo‘q
+    // Eski /admin bookmark — mini-appda yo‘q
     if (window.location.pathname.startsWith('/admin')) {
       setPath('/', { replace: true })
     }
