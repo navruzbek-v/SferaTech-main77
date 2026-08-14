@@ -38,6 +38,18 @@ body {
   -webkit-backdrop-filter: blur(22px);
 }
 
+/* Tugma ostida qattiq soya — bosilganda pastga bosiladi */
+.btn-3d {
+  --btn-edge: rgba(0, 0, 0, 0.5);
+  --btn-glow: rgba(0, 0, 0, 0.35);
+  box-shadow: 0 5px 0 var(--btn-edge), 0 9px 18px var(--btn-glow);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+.btn-3d:active {
+  transform: translateY(4px);
+  box-shadow: 0 1px 0 var(--btn-edge), 0 2px 8px var(--btn-glow);
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: transparent; }

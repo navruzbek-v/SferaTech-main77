@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import {
-  ListChecks, HeartCrack, Play, Swords, Settings, Trophy,
+  ListOrdered, HeartCrack, Play, Swords, Settings, Trophy,
   Pencil, Zap, CalendarDays, BadgeCheck,
 } from 'lucide-react'
 import { useApp } from '../App.jsx'
@@ -21,7 +21,7 @@ function Glass({ className = '', style, children, onClick, as = 'button' }) {
     <Tag
       {...extra}
       onClick={onClick}
-      className={`relative text-left rounded-[1.35rem] active:scale-[0.985] transition-transform duration-150 ${className}`}
+      className={`relative text-left rounded-[1.35rem] ${className}`}
       style={style}
     >
       {children}
@@ -50,19 +50,19 @@ export default function Dashboard() {
   if (exam) return <ExamSimulator type={exam} onExit={() => setExam(null)} />
 
   return (
-    <div className="relative h-full overflow-hidden" style={{ background: '#081018' }}>
+    <div className="relative h-full overflow-hidden" style={{ background: '#0d1319' }}>
       <div aria-hidden className="absolute inset-0 pointer-events-none overflow-hidden">
         <div
-          className="absolute -top-16 -right-10 w-64 h-64 rounded-full blur-3xl opacity-40"
+          className="absolute -top-20 -right-12 w-72 h-72 rounded-full blur-[80px] opacity-[0.18]"
           style={{ background: 'radial-gradient(circle, rgba(56,189,248,0.35), transparent 70%)' }}
         />
         <div
-          className="absolute top-40 -left-16 w-56 h-56 rounded-full blur-3xl opacity-35"
-          style={{ background: 'radial-gradient(circle, rgba(52,211,153,0.28), transparent 70%)' }}
+          className="absolute top-36 -left-20 w-64 h-64 rounded-full blur-[80px] opacity-[0.16]"
+          style={{ background: 'radial-gradient(circle, rgba(52,211,153,0.3), transparent 70%)' }}
         />
         <div
-          className="absolute bottom-24 right-0 w-48 h-48 rounded-full blur-3xl opacity-25"
-          style={{ background: 'radial-gradient(circle, rgba(167,139,250,0.28), transparent 70%)' }}
+          className="absolute bottom-20 -right-8 w-56 h-56 rounded-full blur-[70px] opacity-[0.12]"
+          style={{ background: 'radial-gradient(circle, rgba(167,139,250,0.3), transparent 70%)' }}
         />
       </div>
 
@@ -110,7 +110,13 @@ export default function Dashboard() {
 
           <Glass
             onClick={() => setCalOpen(true)}
-            className="glass w-full p-4 mb-2.5"
+            className="btn-3d w-full p-4 mb-6"
+            style={{
+              background: 'linear-gradient(165deg, #1a3d32 0%, #142a24 100%)',
+              border: '1px solid rgba(52,211,153,0.18)',
+              '--btn-edge': '#0d1f1a',
+              '--btn-glow': 'rgba(0,0,0,0.5)',
+            }}
           >
             <div className="flex items-center justify-between text-sm mb-2">
               <span className="flex items-center gap-1.5 text-white/90 font-semibold">
@@ -143,41 +149,79 @@ export default function Dashboard() {
             </div>
           </Glass>
 
-          <div className="grid grid-cols-2 gap-2.5 mb-2.5 items-stretch">
-            <div className="flex flex-col gap-2.5 min-h-0">
+          <div className="grid grid-cols-2 gap-2.5 mb-6 items-stretch">
+            <div className="flex flex-col gap-3.5 min-h-0">
               <Glass
                 onClick={() => setSection('all')}
-                className="glass flex-1 px-3.5 py-3.5 flex items-center gap-3 min-h-[56px]"
+                className="btn-3d flex-1 px-3.5 py-3.5 flex items-center gap-3 min-h-[56px]"
+                style={{
+                  background: '#16212e',
+                  border: '1px solid rgba(255,255,255,0.07)',
+                  '--btn-edge': '#0a1118',
+                  '--btn-glow': 'rgba(0,0,0,0.45)',
+                }}
               >
-                <ListChecks size={20} className="text-white/75 shrink-0" />
-                <p className="font-bold text-[13.5px] text-white leading-snug">Barcha testlar</p>
+                <ListOrdered size={21} className="text-sky-300/90 shrink-0" />
+                <p className="font-bold text-[14.5px] text-white leading-snug">Barcha testlar</p>
               </Glass>
               <Glass
                 onClick={() => setSection('errors')}
-                className="glass flex-1 px-3.5 py-3.5 flex items-center gap-3 min-h-[56px]"
+                className="btn-3d flex-1 px-3.5 py-3.5 flex items-center gap-3 min-h-[56px]"
+                style={{
+                  background: '#16212e',
+                  border: '1px solid rgba(255,255,255,0.07)',
+                  '--btn-edge': '#0a1118',
+                  '--btn-glow': 'rgba(0,0,0,0.45)',
+                }}
               >
                 {errors > 0 && (
-                  <span className="absolute -top-1 -right-1 min-w-[20px] h-[20px] px-1 rounded-full bg-rose-500/90 text-white text-[10px] font-black flex items-center justify-center">
+                  <span className="absolute -top-1 -right-1 min-w-[20px] h-[20px] px-1 rounded-full bg-rose-500 text-white text-[10px] font-black flex items-center justify-center">
                     {errors}
                   </span>
                 )}
-                <HeartCrack size={20} className="text-rose-300 shrink-0" />
-                <p className="font-bold text-[13.5px] text-white leading-snug">Xatolarni tuzatish</p>
+                <HeartCrack size={21} className="text-rose-400 shrink-0" />
+                <p className="font-bold text-[14.5px] text-white leading-snug">Xatolarni tuzatish</p>
               </Glass>
             </div>
 
             <Glass
               onClick={() => app.notify?.('Premium tez orada', 'info')}
-              className="h-full min-h-[118px] p-4 flex flex-col justify-end overflow-hidden"
+              className="btn-3d aspect-square w-full p-3 flex flex-col items-center justify-center text-center overflow-hidden"
               style={{
-                background: 'linear-gradient(160deg, rgba(56,189,248,0.22), rgba(255,255,255,0.05) 55%, rgba(52,211,153,0.12))',
-                border: '1px solid rgba(125,211,252,0.22)',
-                backdropFilter: 'blur(22px)',
-                WebkitBackdropFilter: 'blur(22px)',
+                background: '#16212e',
+                border: '1px solid rgba(125,211,252,0.14)',
+                '--btn-edge': '#0a1118',
+                '--btn-glow': 'rgba(0,0,0,0.45)',
               }}
             >
-              <p className="relative font-black text-[1.3rem] text-white leading-tight">Premium oling</p>
-              <p className="relative text-[11px] mt-1 font-medium leading-snug text-sky-200/85">
+              <span aria-hidden className="absolute inset-0 pointer-events-none">
+                <span
+                  className="absolute left-[34%] top-[6%] w-[20%] h-[44%] blur-[7px]"
+                  style={{
+                    background: 'rgba(41,110,128,0.75)',
+                    borderRadius: '50% 50% 42% 42% / 60% 60% 40% 40%',
+                    transform: 'rotate(-6deg)',
+                  }}
+                />
+                <span
+                  className="absolute left-[50%] top-[2%] w-[24%] h-[52%] blur-[8px]"
+                  style={{
+                    background: 'rgba(35,96,113,0.8)',
+                    borderRadius: '48% 52% 40% 40% / 58% 58% 42% 42%',
+                    transform: 'rotate(5deg)',
+                  }}
+                />
+                <span
+                  className="absolute left-[66%] top-[10%] w-[18%] h-[38%] blur-[7px]"
+                  style={{
+                    background: 'rgba(30,84,99,0.7)',
+                    borderRadius: '50% 50% 44% 44% / 62% 62% 38% 38%',
+                    transform: 'rotate(12deg)',
+                  }}
+                />
+              </span>
+              <p className="relative font-black text-[1.35rem] text-white leading-tight">Premium oling</p>
+              <p className="relative text-[10.5px] mt-2 font-bold leading-snug text-[#3fb6e8]">
                 vaqti-vaqti bilan almashib turuvchi blok
               </p>
             </Glass>
@@ -185,12 +229,12 @@ export default function Dashboard() {
 
           <Glass
             onClick={() => setExamPick(true)}
-            className="w-full mb-2.5 px-5 py-[18px] flex items-center justify-between"
+            className="btn-3d w-full mb-4 px-5 py-[18px] flex items-center justify-between"
             style={{
-              background: 'linear-gradient(135deg, rgba(52,211,153,0.72), rgba(16,185,129,0.42))',
-              border: '1px solid rgba(167,243,208,0.35)',
-              backdropFilter: 'blur(18px)',
-              WebkitBackdropFilter: 'blur(18px)',
+              background: 'linear-gradient(135deg, #6ee04a, #3dcc62)',
+              border: '1px solid rgba(187,247,208,0.35)',
+              '--btn-edge': '#2c9c33',
+              '--btn-glow': 'rgba(61,204,98,0.3)',
             }}
           >
             <div>
@@ -204,12 +248,12 @@ export default function Dashboard() {
 
           <Glass
             onClick={() => setScreen('battle')}
-            className="w-full mb-2.5 px-5 py-[18px] flex items-center justify-between"
+            className="btn-3d w-full mb-4 px-5 py-[18px] flex items-center justify-between"
             style={{
-              background: 'linear-gradient(135deg, rgba(148,163,184,0.38), rgba(100,116,139,0.22))',
-              border: '1px solid rgba(226,232,240,0.18)',
-              backdropFilter: 'blur(18px)',
-              WebkitBackdropFilter: 'blur(18px)',
+              background: 'linear-gradient(135deg, #8aa7b8, #6d8a9c)',
+              border: '1px solid rgba(226,232,240,0.22)',
+              '--btn-edge': '#4d6675',
+              '--btn-glow': 'rgba(0,0,0,0.4)',
             }}
           >
             <div>
@@ -221,29 +265,6 @@ export default function Dashboard() {
             <span className="w-11 h-11 rounded-full bg-white/90 flex items-center justify-center shrink-0">
               <Swords size={20} className="text-slate-600" />
             </span>
-          </Glass>
-
-          <Glass
-            onClick={() => {
-              const el = document.querySelector('[data-home-scroll]')
-              const news = document.querySelector('[data-news-sheet]')
-              news?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-              if (!news) el?.scrollBy({ top: 280, behavior: 'smooth' })
-            }}
-            className="w-full mb-1 px-5 py-5"
-            style={{
-              background: 'linear-gradient(135deg, rgba(56,189,248,0.55), rgba(14,165,233,0.28))',
-              border: '1px solid rgba(186,230,253,0.35)',
-              backdropFilter: 'blur(18px)',
-              WebkitBackdropFilter: 'blur(18px)',
-            }}
-          >
-            <p className="font-black text-[1.35rem] leading-tight text-[#062033]">
-              yangiliklar va lifehacklar
-            </p>
-            <p className="text-[12px] font-semibold text-[#062033]/55 mt-1">
-              o&apos;qish uchun pastga torting
-            </p>
           </Glass>
         </div>
 

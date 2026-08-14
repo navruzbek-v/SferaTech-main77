@@ -214,16 +214,7 @@ export default function NewsSheet({ onStartCefr }) {
   }
 
   return (
-    <section ref={sectionRef} data-news-sheet className="-mx-0.5 mt-5 pb-24">
-      <div className="flex items-center justify-between mb-3 px-1">
-        <p className="text-[11px] font-bold tracking-[0.14em] uppercase text-white/40">
-          Yangiliklar · {posts.length} ta
-        </p>
-        <p className="text-[11px] text-white/30 tabular-nums">
-          {focusIdx + 1}/{Math.max(1, posts.length)}
-        </p>
-      </div>
-
+    <section ref={sectionRef} data-news-sheet className="-mx-1.5 mt-3 pb-24">
       {loading ? (
         <div className="flex justify-center py-14 text-white/35">
           <Loader2 className="animate-spin" size={24} />
